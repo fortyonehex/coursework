@@ -20,6 +20,13 @@ config = {
 
 firebase = pyrebase.initialize_app(config)
 
+try:
+    IsUser=user['userId']
+except:
+       IsUser = None
+
+auth = firebase.auth()
+
 # Main app class
 class App(customtkinter.CTk):
 
