@@ -37,7 +37,7 @@ while 1:
         try:
             Login = auth.sign_in_with_email_and_password(e,p)
             print('S')
-            print(auth.current_user)
+            print(auth.credentials)
         except:
             print('I')
     else:
