@@ -7,6 +7,19 @@ import pyrebase
 import customtkinter
 import tkinter.messagebox
 
+# Firebase configuration
+config = {
+  "apiKey": "AIzaSyAE6LtDc1r7UizS5LHnPiNwnVsiprUuPk0",
+  "authDomain": "coursework-e0974.firebaseapp.com",
+  "projectId": "coursework-e0974",
+  "storageBucket": "coursework-e0974.appspot.com",
+  "messagingSenderId": "726979196176",
+  "appId": "1:726979196176:web:93a505c63cf66090186195",
+  "measurementId": "G-BCJLPELCBE"
+}
+
+firebase = pyrebase.initialize_app(config)
+
 # Main app class
 class App(customtkinter.CTk):
 
