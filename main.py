@@ -3,6 +3,7 @@ import sys
 import time
 import random
 import tkinter
+import pyrebase
 import customtkinter
 import tkinter.messagebox
 
