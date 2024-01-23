@@ -21,23 +21,18 @@ firebaseConfig = {
 
 firebase = pyrebase.initialize_app(firebaseConfig)
 
-try:
-    IsUser=user['userId']
-except:
-       IsUser = None
-
 auth = firebase.auth()
 
 while 1:
-    e = input('e: ')
-    p = input('p: ')
-    s = input('s: ')
+    e = 'ok@ok.ok'
+    p = 'okokok'
+    s = 'si'
 
     if s == 'si':
         try:
             Login = auth.sign_in_with_email_and_password(e,p)
             print('S')
-            print(auth.credentials)
+            print(Login)
         except:
             print('I')
     else:
