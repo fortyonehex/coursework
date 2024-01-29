@@ -7,10 +7,8 @@ import tkinter
 import pyrebase
 import customtkinter
 import tkinter.messagebox
-# from dotenv import load_dotenv
 
-# Firebase configuration
-# load_dotenv('.env')
+#Firebase configuration
 
 firebaseConfig = {
   "apiKey": "AIzaSyAE6LtDc1r7UizS5LHnPiNwnVsiprUuPk0",
@@ -27,16 +25,14 @@ firebase = pyrebase.initialize_app(firebaseConfig)
 
 auth = firebase.auth()
 
-e = 'ok@ok.ok'
-p = 'okokok'
-s = 'si'
+e = input(': ')
+p = input(': ')
+s = input(': ')
 
 if s == 'si':
     try:
         Login = auth.sign_in_with_email_and_password(e,p)
         print('S')
-        print(Login)
-        Login['displayName'] = 'Hello World!'
         print(Login)
     except:
         print('I')
@@ -44,6 +40,7 @@ else:
     try:
         Login = auth.create_user_with_email_and_password(e,p)
         print('S')
+        print(Login)
     except:
             print('I')
 
