@@ -7,20 +7,13 @@ import tkinter
 import pyrebase
 import sounddevice
 import customtkinter
-import tkinter.messagebox
 
 #Firebase configuration
 
-firebaseConfig = {
-  'apiKey': "AIzaSyAE6LtDc1r7UizS5LHnPiNwnVsiprUuPk0",
-  'authDomain': "coursework-e0974.firebaseapp.com",
-  'databaseURL': "https://coursework-e0974-default-rtdb.asia-southeast1.firebasedatabase.app",
-  'projectId': "coursework-e0974",
-  'storageBucket': "coursework-e0974.appspot.com",
-  'messagingSenderId': "726979196176",
-  'appId': "1:726979196176:web:93a505c63cf66090186195",
-  'measurementId': "G-BCJLPELCBE"
-}
+    # Retrieving configuration keys
+
+with open('.env', 'r') as env:
+    firebaseConfig = exec(''.join(env.readlines()))
 
 firebase = pyrebase.initialize_app(firebaseConfig)
 
@@ -34,6 +27,9 @@ while 1:
     e = input()
     p = input()
     s = input()
+
+    if e or p or s == 'q':
+        break
 
     if s == 'si':
         try:
