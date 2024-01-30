@@ -41,7 +41,7 @@ while 1:
             storage.child(Login['displayName']).put('/Users/kavinjayakumar/Desktop/S4-01 Timetable Term 1.png')
         except:
             print('I')
-    else:
+    elif s == 'su':
         try:
             Login = auth.create_user_with_email_and_password(e,p)
             print('S')
@@ -51,6 +51,8 @@ while 1:
             storage.child(Login['displayName']).put('/Users/kavinjayakumar/Desktop/S4-01 Timetable Term 1.png')
         except:
                 print('I')
+    else:
+        print('\nTRY AGAIN YOU IDIOT\n')
 
 # Main app class
 class App(customtkinter.CTk):
