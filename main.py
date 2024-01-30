@@ -52,7 +52,7 @@ while 1:
         except:
                 print('I')
     else:
-        print('\nTRY AGAIN YOU IDIOT\n')
+        print('\nTRY AGAIN\n')
 
 # Main app class
 class App(customtkinter.CTk):
