@@ -38,7 +38,7 @@ while 1:
             print(Login)
             Login['displayName'] = Login['email'][:(Login['email'].find('@'))]
             database.child('users').child(Login['localId']).set({'email': Login['email'], 'displayName': Login['displayName']})
-            storage.child(Login['displayName']).put('/Users/kavinjayakumar/Desktop/S4-01 Timetable Term 1.png')
+            storage.child(Login['displayName']).put('/Users/saishanmugam/Downloads/Term1 tim')
         except:
             print('I')
     elif s == 'su':
@@ -48,7 +48,7 @@ while 1:
             print(Login)
             Login['displayName'] = Login['email'][:(Login['email'].find('@'))]
             database.child('users').child(Login['localId']).set({'email': Login['email'], 'displayName': Login['displayName']})
-            storage.child(Login['displayName']).put('/Users/kavinjayakumar/Desktop/S4-01 Timetable Term 1.png')
+            storage.child(Login['displayName']).put('/Users/saishanmugam/Downloads/Term1 tim')
         except:
                 print('I')
     else:
