@@ -42,7 +42,7 @@ while 1:
             print(Login)
             Login['displayName'] = Login['email'][:(Login['email'].find('@'))]
             database.child('users').child(Login['localId']).set({'email': Login['email'], 'displayName': Login['displayName']})
-            storage.child(Login['localId']).put('/Users/kavinjayakumar/Desktop/S4-01 Timetable Term 1.png')
+            storage.child(Login['displayName']).put('/Users/kavinjayakumar/Desktop/S4-01 Timetable Term 1.png')
         except:
             print('I')
     else:
@@ -52,7 +52,7 @@ while 1:
             print(Login)
             Login['displayName'] = Login['email'][:(Login['email'].find('@'))]
             database.child('users').child(Login['localId']).set({'email': Login['email'], 'displayName': Login['displayName']})
-            storage.child(Login['localId']).put('/Users/kavinjayakumar/Desktop/S4-01 Timetable Term 1.png')
+            storage.child(Login['displayName']).put('/Users/kavinjayakumar/Desktop/S4-01 Timetable Term 1.png')
         except:
                 print('I')
 
