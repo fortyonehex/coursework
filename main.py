@@ -5,6 +5,7 @@ import time
 import random
 import tkinter
 import pyrebase
+import sounddevice
 import customtkinter
 import tkinter.messagebox
 
@@ -23,30 +24,37 @@ firebaseConfig = {
 
 firebase = pyrebase.initialize_app(firebaseConfig)
 
-# database = firebase.database()
+database = firebase.database()
+
+storage = firebase.storage()
 
 auth = firebase.auth()
 
-e = 't@gmail.com'
-p = 'tttttt'
-s = 'su'
+while 1:
+    e = input()
+    p = input()
+    s = input()
 
-if s == 'si':
-    try:
-        Login = auth.sign_in_with_email_and_password(e,p)
-        print('S')
-        print(Login)
-        # name_info = {'name': 'John'}
-        # database.push(data=name_info)
-    except:
-        print('I')
-else:
-    try:
-        Login = auth.create_user_with_email_and_password(e,p)
-        print('S')
-        print(Login)
-    except:
+    if s == 'si':
+        try:
+            Login = auth.sign_in_with_email_and_password(e,p)
+            print('S')
+            print(Login)
+            Login['displayName'] = Login['email'][:(Login['email'].find('@'))]
+            database.child('users').child(Login['localId']).set({'email': Login['email'], 'displayName': Login['displayName']})
+            storage.child(Login['localId']).put('/Users/kavinjayakumar/Desktop/S4-01 Timetable Term 1.png')
+        except:
             print('I')
+    else:
+        try:
+            Login = auth.create_user_with_email_and_password(e,p)
+            print('S')
+            print(Login)
+            Login['displayName'] = Login['email'][:(Login['email'].find('@'))]
+            database.child('users').child(Login['localId']).set({'email': Login['email'], 'displayName': Login['displayName']})
+            storage.child(Login['localId']).put('/Users/kavinjayakumar/Desktop/S4-01 Timetable Term 1.png')
+        except:
+                print('I')
 
 # Main app class
 class App(customtkinter.CTk):
