@@ -22,7 +22,7 @@ class Question():
     
     # allow for the response or an index to be passed
     # to check if it is correct
-    def correct(self, response):
+    def validate(self, response):
         assert type(response) in [str, int]
         if type(response) == int:
             assert 0 <= response < len(self.options)
