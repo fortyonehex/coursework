@@ -2,20 +2,25 @@
 import os
 import sys
 import time
+import base64
 import random
 import tkinter
 import pyrebase
 import sounddevice
 import customtkinter
+from PIL import Image
+from dotenv import load_dotenv
 
-#Firebase configuration
+# Firebase configuration
 
-    # Retrieving configuration keys
+## Retrieving configuration keys
+load_dotenv('.env')
 
-with open('.env', 'r') as env:
-    firebaseConfig = exec(''.join(env.readlines()))
+firebaseConfig = eval(os.getenv('CONFIG'))
 
 firebase = pyrebase.initialize_app(firebaseConfig)
+
+print('Initialised')
 
 database = firebase.database()
 
@@ -24,35 +29,44 @@ storage = firebase.storage()
 auth = firebase.auth()
 
 while 1:
-    e = input()
-    p = input()
-    s = input()
+    e = input('e: ')
+    p = input('p: ')
+    s = input('s: ')
 
-    if e or p or s == 'q':
+    if (e or p or s) == 'q':
         break
 
     if s == 'si':
         try:
-            Login = auth.sign_in_with_email_and_password(e,p)
+            user = auth.sign_in_with_email_and_password(e,p)
             print('S')
-            print(Login)
-            Login['displayName'] = Login['email'][:(Login['email'].find('@'))]
-            database.child('users').child(Login['localId']).set({'email': Login['email'], 'displayName': Login['displayName']})
-            storage.child(Login['displayName']).put('/Users/saishanmugam/Downloads/Term1 tim')
+            print(user)
+            user = database.child('users').child(user['localId'])
+            print('Here')
+            print(user['expiresIn'])
+            time.sleep(5)
+            print(user['expiresIn'])
+            print('Here')
+            print('\n\n' + storage.bucket.get_blob(user.child('displayName')).download_as_string())
         except:
             print('I')
     elif s == 'su':
         try:
-            Login = auth.create_user_with_email_and_password(e,p)
+            user = auth.create_user_with_email_and_password(e,p)
             print('S')
-            print(Login)
-            Login['displayName'] = Login['email'][:(Login['email'].find('@'))]
-            database.child('users').child(Login['localId']).set({'email': Login['email'], 'displayName': Login['displayName']})
-            storage.child(Login['displayName']).put('/Users/saishanmugam/Downloads/Term1 tim')
+            user['displayName'] = user['email'][:(user['email'].find('@'))]
+            print('D')
+            database.child(f"users/{user['localId']}").set(user)
+            print('E')
+            storage.child('images/E').upload('EnviroMate Icon copy.png')
+            print('F')
+            print(storage.child('E').get_url(None))
         except:
-                print('I')
+            print('I')
     else:
         print('\nTRY AGAIN\n')
+
+print('Exited')
 
 # Main app class
 class App(customtkinter.CTk):
