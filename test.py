@@ -1,4 +1,5 @@
 from questions import *
+from quiz import *
 
 # proof of concept
 qnd = parse_qn_data("format.json")
