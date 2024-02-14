@@ -1,0 +1,4 @@
+flet
+pyrebase
+python-dotenv
+requests-toolbelt==0.10.1
