@@ -680,6 +680,7 @@ class AbilityQuiz(flet.Row):
         self.user_id = authentication.authenticate_token(authentication.load_token())
         self.user = authentication.load_user()
         self.user_level = int(database.child(f"users/{self.user_id}/ability_quiz_tries").get().val())
+        page.session.set("ability_curr_page", 0)
         
         self.navigation_rail = NavigationRail(page)
         self.controls = [
@@ -687,7 +688,7 @@ class AbilityQuiz(flet.Row):
 
             flet.VerticalDivider(width=1),
 
-            QuestionCard(ability_quiz[0]["sections"][1]).build(page)
+            QuestionCard(ability_quiz[0]["sections"][page.session.get("ability_curr_page")]).build(page)
         ]
 
 class TargetedPractice(flet.Row):
@@ -865,7 +866,9 @@ class QuestionCard(flet.UserControl):
         )
 
     def submit(self, e: flet.ControlEvent):
-        pass
+        self.page.session.set("ability_curr_page", self.page.session.get("ability_curr_page")+1)
+        print(self.page.session.get("ability_curr_page"))
+        self.page.update()
 
     def validate(self, e: flet.ControlEvent):
         si, sj = list(e.control.selected)[0].split(",")

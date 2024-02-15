@@ -37,4 +37,4 @@ for l in k:
             s = 0
 
 print(entries)
-json.dump(entries, open("exp.json", "w"))
+json.dump(entries, open("targeted.json", "w"))
