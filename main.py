@@ -42,8 +42,6 @@ def connect(host='http://google.com'):
 
 connect()
 
-user = {}
-
 # Colour codes
 
 PRIMARY = '#8AB1D0'
@@ -692,26 +690,29 @@ class TargetedPractice(flet.Row):
         super().__init__()
         print('TargetedPractice')
         page.update()
-        self.bgcolor = 'red'
         self.expand = True
         self.alignment = flet.MainAxisAlignment.START
         self.user_id = authentication.authenticate_token(authentication.load_token())
         self.user = authentication.load_user()
         self.user_level = int(database.child(f"users/{self.user_id}/ability_quiz_tries").get().val())
-        new_user = user['ability_quiz_score'] == 0
+        new_user = self.user['ability_quiz_score'] == 0
 
         self.navigation_rail = NavigationRail(page)
 
-        if new_user:
-            self.screen = flet.Column(
-                flet.Text('AQ first'),
-                flet.ElevatedButton(
-                    "AQ",
-                    on_click=self.toAbilityQuiz
-                )
-            )
-        else:
-            self.screen = flet.Text("TargetedPractice")
+        
+        # DOESNT WORK - CANT CHECK IF NEW USER
+        # if new_user:
+        #     self.screen = flet.Column(
+        #         flet.Text('AQ first'),
+        #         flet.ElevatedButton(
+        #             "AQ",
+        #             on_click=self.toAbilityQuiz
+        #         )
+        #     )
+        # else:
+        self.screen = flet.Text("TargetedPractice")
+        
+        page.update()
 
         self.controls = [
             self.navigation_rail,
@@ -726,6 +727,12 @@ class TargetedPractice(flet.Row):
         selectedIndex = 1
 
 def NavigationRail(page):
+
+    def logout(e: flet.ControlEvent):
+        authentication.revoke_token(authentication.load_token())
+        page.go('/authentication')
+        Authentication.authTabs.selectedIndex = 0
+
     global selectedIndex
     navigation_rail = flet.NavigationRail(
         selected_index=selectedIndex,
@@ -742,7 +749,7 @@ def NavigationRail(page):
         ),
         trailing=flet.IconButton(
             icon="logout",
-            # on_click=logout
+            on_click=logout
         ),
         group_alignment=-0.9,
         destinations=[
@@ -780,11 +787,6 @@ def NavigationRail(page):
             page.go('/practise')
 
         page.update()
-
-    def logout(e: flet.ControlEvent):
-        authentication.revoke_token(authentication.load_token())
-        page.go('/authentication')
-        Authentication.authTabs.selectedIndex = 0
 
     return navigation_rail 
 
