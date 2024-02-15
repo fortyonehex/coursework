@@ -47,7 +47,13 @@ class QuestionGroup():
         self._store = []
         for qn in questions_object:
             self._store.append(Question(qn["question"], qn["options"], qn["options"][qn["answer"]], qn["answer"]))
-        
+
+    def grade(self, questions):
+        score = 0
+        for i in range(len(questions)):
+            score += int(self._store[i].validate(questions[i]))
+        return score
+
     def __len__(self):
         return len(self._store)
 

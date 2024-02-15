@@ -681,6 +681,8 @@ class AbilityQuiz(flet.Row):
         self.user = authentication.load_user()
         self.user_level = int(database.child(f"users/{self.user_id}/ability_quiz_tries").get().val())
         page.session.set("ability_curr_page", 0)
+
+        ability_quiz_questions = ability_quiz[0]["sections"] + ability_quiz[1]["sections"]
         
         self.navigation_rail = NavigationRail(page)
         self.controls = [
@@ -688,7 +690,7 @@ class AbilityQuiz(flet.Row):
 
             flet.VerticalDivider(width=1),
 
-            QuestionCard(ability_quiz[0]["sections"][page.session.get("ability_curr_page")]).build(page)
+            AbilityQuizCard(ability_quiz_questions).build(page)
         ]
 
 class TargetedPractice(flet.Row):
@@ -733,7 +735,6 @@ class TargetedPractice(flet.Row):
         selectedIndex = 1
 
 def NavigationRail(page):
-
     def logout(e: flet.ControlEvent):
         authentication.revoke_token(authentication.load_token())
         page.go('/authentication')
@@ -796,21 +797,31 @@ def NavigationRail(page):
 
     return navigation_rail 
 
-class QuestionCard(flet.UserControl):
-    def __init__(self, group):
-        self.questions = list(group)
-        self.instructions = group.instructions
-        if type(group) == PassageGroup:
-            self.ispassage = True
-            self.passage = group.text
+class AbilityQuizCard(flet.UserControl):
+    def __init__(self, quiz):
+        self.state = 0
+        self.quiz = quiz
+
+        self.scores = [None]*len(self.quiz)
+        self.controls = []
+
+    def refresh_questions(self):
+        self.questions = list(self.quiz[self.state])
+        self.instructions = self.quiz[self.state].instructions
+        if type(self.quiz[self.state]) == PassageGroup:
+            self.passage = self.quiz[self.state].text
         else:
             self.passage = ""
-            self.ispassage = False
-
-        self.selections = [None]*len(self.questions)
+        self.selections = [None]*len(self.quiz[self.state])
 
     def build(self, page):
         self.page = page
+        self.refresh_questions()
+        self.rebuild()
+        
+        return flet.Row(controls=self.controls, width=page.width)
+
+    def rebuild(self):
         tabs = []
         for i in range(len(self.questions)):
             options = [flet.Text("Q%d) " %(i+1) + self.questions[i].name, weight=flet.FontWeight.BOLD)]
@@ -828,49 +839,47 @@ class QuestionCard(flet.UserControl):
             #print(options)
             tabs += options
 
-        self.button = flet.ElevatedButton(
-                            text="Next",
-                            disabled=True,
-                            on_click=self.submit
-                        )
-        
-        return flet.Row(controls=
-            [
-                flet.Container(
-                    content=flet.Column(controls=[
-                            flet.Text(self.instructions, weight=flet.FontWeight.BOLD),
-                            flet.Divider(height=1)] + 
-                            [flet.Text(i) for i in self.passage.split("\n")],
-                        expand=True,
-                        width=page.width/2,
-                        scroll=flet.ScrollMode.ALWAYS
-                    ), 
-                    padding=10,
-                    alignment=flet.alignment.top_left
-                ), 
-                flet.VerticalDivider(width=1),
-                flet.Column(
-                    controls=tabs+[self.button],
-                    scroll=flet.ScrollMode.ALWAYS,
-                    spacing=10,
-                    expand=True
-        #                flet.ElevatedButton(
-        #                    text="Next",
-        #                    disabled=True,
-        #                    on_click=self.submit
-        #                )
-                    
-                )
-            ],
-            expand=True,
-        )
+        self.button = flet.ElevatedButton(text="Next", disabled=True, on_click=self.nextpage)
+        self.controls.append(flet.Container(
+                                    content=flet.Column(controls=[
+                                            flet.Text(self.instructions, weight=flet.FontWeight.BOLD),
+                                            flet.Divider(height=1)] + 
+                                            [flet.Text(i) for i in self.passage.split("\n")],
+                                        expand=True,
+                                        width=self.page.width*0.3,
+                                        scroll=flet.ScrollMode.ALWAYS
+                                    ), 
+                                   # padding=10,
+                                    alignment=flet.alignment.top_left
+                                ))
+        self.controls.append(flet.VerticalDivider(width=1))
+        self.controls.append(flet.Column(
+                                    controls=tabs+[self.button],
+                                    scroll=flet.ScrollMode.ALWAYS,
+                                    expand=True
+                                ))
 
-    def submit(self, e: flet.ControlEvent):
-        self.page.session.set("ability_curr_page", self.page.session.get("ability_curr_page")+1)
-        print(self.page.session.get("ability_curr_page"))
+    def nextpage(self, e: flet.ControlEvent):
+        self.grade_curr()
+
+        self.state += 1
+        del self.controls[0:3]
+        self.refresh_questions()
+        self.rebuild()
+
+        if self.state == len(self.quiz)-1:
+            self.button.text = "Submit"
+            self.button.on_click = self.submit
+        
+        print(self.controls)
         self.page.update()
 
+    def grade_curr(self):
+        curr_score = self.quiz[self.state].grade(self.selections)
+        self.scores[self.state] = curr_score
+
     def validate(self, e: flet.ControlEvent):
+        print(e.control.selected)
         si, sj = list(e.control.selected)[0].split(",")
         # print(si, sj)
         self.selections[int(si)] = int(sj)
@@ -879,6 +888,22 @@ class QuestionCard(flet.UserControl):
         else:
             self.button.disabled = True
         self.page.update()
+
+    def submit(self, e: flet.ControlEvent):
+        self.grade_curr()
+        print(self.scores)
+
+        del self.controls[0:3]
+        self.controls.append(flet.Container(content=flet.Column(controls=[
+            flet.Text("You are...", size=20),
+            flet.Text("grade", size=36, weight=flet.FontWeight.BOLD, spans=[flet.TextSpan(
+                " at Express Chinese, and", flet.TextStyle(size=20, weight=flet.FontWeight.NORMAL))]),
+            flet.Text("grade", size=36, weight=flet.FontWeight.BOLD, spans=[flet.TextSpan(
+                " at Higher Chinese", flet.TextStyle(size=20, weight=flet.FontWeight.NORMAL))])
+        ], alignment=flet.alignment.center), margin=100))
+        self.page.update()
+
+        # do some cloud shit here idk kavin pls fix
 
 
 # def main(page: flet.Page):
