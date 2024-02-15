@@ -20,15 +20,14 @@ database = firebase.database()
 
 def create_user(email, password, motherTongue, level):
     try:
-        user = firebase_auth.create_user(
-            email=email,
-            password=password,
-        )
-        user.display_name = user.email[:(user.email.find('@'))]
-        database.child(f"users/{user.uid}").set({
-            'uid': user.uid,
-            'display_name': user.display_name,
-            'email': user.email,
+        print('CR')
+        user = dict(auth.create_user_with_email_and_password(email, password))
+        user['displayName'] = user['email'][:(user['email'].find('@'))]
+        print('SETTING')
+        database.child(f"users/{user['localId']}").set({
+            'idToken': user['idToken'],
+            'display_name': user['displayName'],
+            'email': email,
             'mother_tongue': motherTongue,
             'level': level,
             'ability_quiz_tries': 0,
@@ -36,7 +35,8 @@ def create_user(email, password, motherTongue, level):
             'targeted_practice_level': 0,
             'targeted_practice_tries': 0,
         })
-        return user.uid
+        print('SET')
+        return user['idToken']
     except:
         return None
 
@@ -68,10 +68,25 @@ def load_token():
     try:
         with open('token.pickle', 'rb') as f:
             token = pickle.load(f)
+        # print(token)
         return token
     except:
         return None
 
+def load_user():
+    print("STARTs")
+    try:
+        print(authenticate_token(load_token()))
+        info = database.child(f"users/{authenticate_token(load_token())}").get()
+        print('D 1')
+        user = info.val()
+        print('D 2')
+        print(user)
+        print(info)
+        return user
+    except:
+        print('FAIL')
+        return None
 
 def authenticate_token(token):
     try:

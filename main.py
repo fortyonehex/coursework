@@ -2,7 +2,6 @@
 import os
 import re
 import sys
-from turtle import bgcolor
 import flet
 import time
 import base64
@@ -71,6 +70,10 @@ class Main(flet.UserControl):
         page.window_resizable = True
         page.vertical_alignment = flet.MainAxisAlignment.CENTER
         page.horizontal_alignment = flet.MainAxisAlignment.CENTER
+
+        theme = flet.Theme()
+        theme.page_transitions.macos = flet.PageTransitionTheme.NONE
+        page.theme = theme
         page.update()
 
         # self.ICBanner = flet.Banner(
@@ -101,19 +104,21 @@ class Main(flet.UserControl):
         self.page.on_route_change = self.on_route_change
         # self.page.on_view_pop = self.view_pop
         # self.checkICStatus()
+        global selectedIndex
+        selectedIndex = 0
         token = self.load_token()
-        # if authentication.authenticate_token(token):
-        #     self.page.go(self.page.route)
-        # else:
-        self.page.go('/authentication')
+        if authentication.authenticate_token(token):
+            self.page.go('/home')
+        else:
+            self.page.go('/authentication')
     
-    def on_route_change(self, route):
+    def on_route_change(self, route: flet.RouteChangeEvent):
         new_page = {
             "/authentication": Authentication,
-            "/tutorial": Tutorial,
             "/home": Home,
             "/quiz": AbilityQuiz,
             "/practise": TargetedPractice,
+            "/tutorial": Tutorial,
             "/settings": Settings
 
         }[self.page.route](self.page)
@@ -167,8 +172,7 @@ class Authentication(flet.Row):
                 flet.ElevatedButton("Sign Up", on_click=self.signInToSignUp),
             ],
             actions_alignment=flet.MainAxisAlignment.SPACE_BETWEEN,
-            on_dismiss=lambda _ : ...,
-                
+            on_dismiss=self.signInError
         )
 
         self.emailSignIn=flet.TextField(
@@ -211,7 +215,7 @@ class Authentication(flet.Row):
             height=40,
             disabled = True,
             expand=True,
-            on_click=lambda _ : ...,
+            on_click=self.signIn
         )
 
         self.clearSignInButton=flet.IconButton(
@@ -238,8 +242,7 @@ class Authentication(flet.Row):
                 flet.ElevatedButton("Sign In", on_click=self.signUpToSignIn),
             ],
             actions_alignment=flet.MainAxisAlignment.SPACE_BETWEEN,
-            on_dismiss=lambda _ : ...,
-                
+            on_dismiss=self.signUpError
         )
 
         self.emailSignUp=flet.TextField(
@@ -272,7 +275,6 @@ class Authentication(flet.Row):
             can_reveal_password=True,
             on_change=self.validate_signUp,
             on_submit=self.validSignUpPassword,
-            error_text=""
         )
 
         self.mtSelection = flet.Dropdown(
@@ -327,7 +329,7 @@ class Authentication(flet.Row):
             height=40,
             disabled = True,
             expand=True,
-            on_click=lambda _ : ...,
+            on_click=self.signUp
         )
 
         self.clearSignUpButton=flet.IconButton(
@@ -492,12 +494,28 @@ class Authentication(flet.Row):
             ),
         ]
 
-        # self.width = page.window_width,
-        # self.height = page.window_height,
+        self.width = page.window_width,
+        self.height = page.window_height,
         self.vertical_alignment = flet.CrossAxisAlignment.START,
         self.spacing=0,
         self.alignment = flet.MainAxisAlignment.START,
         self.expand=True
+    
+    def signIn(self, e: flet.ControlEvent):
+        token = authentication.login_user(self.emailSignIn.value, self.passSignIn.value)
+        self.page.update()
+
+        if token:
+            authentication.store_session(token)
+            print("WENT 1")
+            self.page.go('/home')
+            print("WENT 2")
+            # self.page.update()
+        else:
+            self.page.dialog = self.signInErrorDialog
+            self.page.dialog.open = True
+            self.page.update()
+
     
     def clearSignIn(self, e: flet.ControlEvent):
         self.emailSignIn.value, self.passSignIn.value = None, None
@@ -543,6 +561,30 @@ class Authentication(flet.Row):
             self.signInButton.disabled=True
         
         self.page.update()
+
+    def signInError(self, e: flet.ControlEvent):
+        try:
+            self.page.update() 
+            account = database.child('users').order_by_child('email').equal_to(self.emailSignIn.value).get().val()
+            self.passSignIn.value = None
+            self.emailSignIn.error_text = "Incorrect password"
+            self.page.update() 
+        except:
+            self.emailSignIn.error_text = "Account not found. Sign up instead?"
+            self.emailSignIn.value, self.passSignIn.value = None, None
+            self.page.update()
+
+    def signUp(self, e: flet.ControlEvent):
+        user = authentication.create_user(self.emailSignUp.value, self.passSignUp.value, self.mtSelection.value, self.levelSelection.value)
+        if user:
+            token = authentication.login_user(self.emailSignUp.value, self.passSignUp.value)
+            authentication.store_session(token)
+            self.page.update()
+            self.page.go('/home')
+        else:
+            # self.page.dialog = self.signUpError
+            self.page.show_dialog(self.signUpErrorDialog)
+            self.page.update()
 
     def clearSignUp(self, e: flet.ControlEvent):
         self.emailSignUp.value, self.passSignUp.value, self.mtSelection.value, self.levelSelection.value, self.tcCheckbox.value = None, None, None, None, None
@@ -590,119 +632,101 @@ class Authentication(flet.Row):
             self.page.update()
         
         self.page.update()
-    
 
-class Tutorial(flet.Container):
+    def signUpError(self, e: flet.ControlEvent):
+        try:
+            account = database.child('users').order_by_child('email').equal_to(self.emailSignUp.value).get().val()
+            print('GOT A')
+            self.emailSignUp.value, self.passSignUp.value, self.mtSelection.value, self.levelSelection.value, self.tcCheckbox.value = None, None, None, None, None
+            self.emailSignUp.error_text = "Account already exists. Sign in instead."
+            self.page.update()
+        except:
+            self.emailSignUp.error_text = "Enter a valid email address"
+            self.emailSignUp.value, self.passSignUp.value = None, None
+            self.page.update()
+f = 123
+class Home(flet.Row):
     def __init__(self, page: flet.Page):
         super().__init__()
-        print('TUTORIAL')
+        print('HOME')
+        page.update()
         self.bgcolor = 'red'
         self.expand = True
-        self.alignment = flet.alignment.center
-        self.width = 500
-        self.height = 100
-        self.content = flet.Column(
-            alignment='center',
-            horizontal_alignment='center',
-            expand=True,
-            controls=[
-                flet.Container(
-                    width=500,
-                    border_radius=12,
-                    padding=40,
-                    # bgcolor='white',
-                    content=flet.Column(
-                        horizontal_alignment='center',
-                        controls=[
-                            flet.Text(
-                                value="Welcome Back!",
-                                size=16,
-                                color='black',
-                                text_align='center'
-                            ),
-                        ]
-                    )
-                )
-            ]
-        )
-        page.appbar = flet.AppBar(
-            leading=flet.Icon(flet.icons.HELP),
+        self.alignment = flet.MainAxisAlignment.CENTER
+        self.user_id = authentication.authenticate_token(authentication.load_token())
+        self.user = authentication.load_user()
+        self.user_level = int(database.child(f"users/{self.user_id}/ability_quiz_tries").get().val())
+        global f
+        f = 3
+        print(self.user_id)
+        page.update()
+        self.bar = flet.AppBar(
+            leading=flet.Icon(flet.icons.PALETTE),
             leading_width=40,
-            title=flet.Text('Tutorial'),
+            title=flet.Text("AppBar Example"),
             center_title=False,
             bgcolor=flet.colors.SURFACE_VARIANT,
             actions=[
                 flet.IconButton(flet.icons.WB_SUNNY_OUTLINED),
-                flet.IconButton(flet.icons.FILTER_3,on_click=lambda _ : ...),
+                flet.IconButton(flet.icons.FILTER_3),
                 flet.PopupMenuButton(
                     items=[
                         flet.PopupMenuItem(text="Item 1"),
                         flet.PopupMenuItem(),  # divider
                         flet.PopupMenuItem(
-                            text="Checked item", checked=False, on_click=lambda _ : print('clicked')
+                            text="Checked item", checked=False, on_click=self.check_item_clicked
                         ),
                     ]
                 ),
             ],
         )
 
-class Home(flet.Container):
-    def __init__(self, page: flet.Page):
-        super().__init__()
-        print('HOME')
-        self.bgcolor = 'red'
-        self.expand = True
-        self.alignment = flet.alignment.center
-        self.width = 500
-        self.height = 100
-        self.content = flet.Column(
-            alignment='center',
-            horizontal_alignment='center',
-            expand=True,
+        self.lg = flet.ElevatedButton(
+            self.user,
+            on_click=self.logout,
+            expand=True
+        )
+
+        self.navigation_rail = NavigationRail(page)
+
+        self.controls = [
+            self.navigation_rail,
+
+            flet.VerticalDivider(width=1),
+
+            self.lg,
+
+            flet.ElevatedButton(
+                "Show",
+                # on_click=self.show_bar
+                # on_click=self.tryAdd
+            ),
+        ]
+
+        self.navBar = flet.NavigationDrawer(
             controls=[
-                flet.AppBar(
-                    leading=flet.Icon(flet.icons.PALETTE),
-                    leading_width=40,
-                    title=flet.Text("Home"),
-                    center_title=False,
-                    bgcolor=flet.colors.SURFACE_VARIANT,
-                    actions=[
-                        flet.IconButton(flet.icons.WB_SUNNY_OUTLINED),
-                        flet.IconButton(flet.icons.FILTER_3),
-                        flet.PopupMenuButton(
-                            items=[
-                                flet.PopupMenuItem(text="Item 1"),
-                                flet.PopupMenuItem(),  # divider
-                                flet.PopupMenuItem(
-                                    text="Checked item", checked=False, on_click=self.check_item_clicked
-                                ),
-                            ]
-                        ),
-                    ],
+                flet.NavigationDrawerDestination(
+                    icon=flet.icons.ADD_TO_HOME_SCREEN_SHARP, label="Item 1"
                 ),
-                flet.Container(
-                    width=500,
-                    border_radius=12,
-                    padding=40,
-                    # bgcolor='white',
-                    content=flet.Column(
-                        horizontal_alignment='center',
-                        controls=[
-                            flet.Text(
-                                value="Welcome Back!",
-                                size=16,
-                                color='black',
-                                text_align='center'
-                            ),
-                        ]
-                    )
-                )
-            ]
-        ) 
-      
-    def check_item_clicked(self, e):
+                flet.NavigationDrawerDestination(icon=flet.icons.ADD_COMMENT, label="Item 2"),
+            ],
+            on_change=lambda e : print(e.control.selected_index)
+        )
+        page.navigation_bar = self.navBar
+        page.navigation_bar.open == True
+
+    def show_bar(e: flet.ControlEvent):
+        e.control.page.drawer.open = True
+        e.control.page.drawer.update()
+
+    def check_item_clicked(self, e: flet.ControlEvent):
         e.control.checked = not e.control.checked
         self.page.update()
+
+    def logout(self, e: flet.ControlEvent):
+        authentication.revoke_token(authentication.load_token())
+        self.page.go('/authentication')
+        Authentication.authTabs.selectedIndex = 0
 
 class AbilityQuiz(flet.Container):
     ...
@@ -710,9 +734,151 @@ class AbilityQuiz(flet.Container):
 class TargetedPractice(flet.Container):
     ...
 
+class Tutorial(flet.Row):
+    def __init__(self, page: flet.Page):
+        super().__init__()
+        print('TUTORIAL')
+        page.update()
+        self.bgcolor = 'red'
+        self.expand = True
+        self.alignment = flet.MainAxisAlignment.CENTER
+        self.user_id = authentication.authenticate_token(authentication.load_token())
+        self.user = authentication.load_user()
+        self.user_level = int(database.child(f"users/{self.user_id}/ability_quiz_tries").get().val())
+        # self.level = 
+        print(self.user_id)
+        page.update()
+        self.bar = flet.AppBar(
+            leading=flet.Icon(flet.icons.PALETTE),
+            leading_width=40,
+            title=flet.Text("AppBar Example"),
+            center_title=False,
+            bgcolor=flet.colors.SURFACE_VARIANT,
+            actions=[
+                flet.IconButton(flet.icons.WB_SUNNY_OUTLINED),
+                flet.IconButton(flet.icons.FILTER_3),
+                flet.PopupMenuButton(
+                    items=[
+                        flet.PopupMenuItem(text="Item 1"),
+                        flet.PopupMenuItem(),  # divider
+                        flet.PopupMenuItem(
+                            text="Checked item", checked=False, on_click=self.check_item_clicked
+                        ),
+                    ]
+                ),
+            ],
+        )
+
+        self.lg = flet.ElevatedButton(
+            "LOG OUT",
+            on_click=self.logout,
+            expand=True
+        )
+
+        self.navigation_rail = NavigationRail(page=page)
+
+        self.controls = [
+            self.navigation_rail,
+
+            flet.VerticalDivider(width=1),
+
+            self.lg,
+
+            flet.ElevatedButton(
+                "Show",
+                # on_click=self.show_bar
+                # on_click=self.tryAdd
+            ),
+        ]
+
+        self.navBar = flet.NavigationDrawer(
+            controls=[
+                flet.NavigationDrawerDestination(
+                    icon=flet.icons.ADD_TO_HOME_SCREEN_SHARP, label="Item 1"
+                ),
+                flet.NavigationDrawerDestination(icon=flet.icons.ADD_COMMENT, label="Item 2"),
+            ],
+            on_change=lambda e : print(e.control.selected_index)
+        )
+        page.navigation_bar = self.navBar
+        page.navigation_bar.open == True
+
+    def show_bar(e: flet.ControlEvent):
+        e.control.page.drawer.open = True
+        e.control.page.drawer.update()
+
+    def check_item_clicked(self, e: flet.ControlEvent):
+        e.control.checked = not e.control.checked
+        self.page.update()
+
+    def logout(self, e: flet.ControlEvent):
+        authentication.revoke_token(authentication.load_token())
+        self.page.go('/authentication')
+        Authentication.authTabs.selectedIndex = 0
+
 class Settings(flet.Container):
     ...
 
+def NavigationRail(page):
+    global selectedIndex
+    navigation_rail = flet.NavigationRail(
+        selected_index=selectedIndex,
+        label_type=flet.NavigationRailLabelType.ALL,
+        min_width=60,
+        elevation=1,
+        indicator_shape=flet.ContinuousRectangleBorder(radius = 20),
+        leading=flet.Image(
+            src='https://img.freepik.com/free-photo/painting-mountain-lake-with-mountain-background_188544-9126.jpg',
+            opacity=0.9,
+            fit=flet.ImageFit.COVER,
+            expand=False,
+            width=50
+        ),
+        trailing=flet.IconButton(
+            icon="Settings"
+        ),
+        group_alignment=-0.8,
+        destinations=[
+            flet.NavigationRailDestination(
+                icon=flet.icons.HOUSE_OUTLINED, 
+                selected_icon=flet.icons.HOUSE, 
+                label="Home"
+            ),
+            flet.NavigationRailDestination(
+                icon_content=flet.Icon(flet.icons.BOOKMARK_BORDER),
+                selected_icon_content=flet.Icon(flet.icons.BOOKMARK),
+                label="Ability\n Quiz",
+            ),
+            flet.NavigationRailDestination(
+                icon=flet.icons.SETTINGS_OUTLINED,
+                selected_icon_content=flet.Icon(flet.icons.SETTINGS),
+                label="Targeted\nPractise"
+            ),
+            flet.NavigationRailDestination(
+                icon=flet.icons.SETTINGS_OUTLINED,
+                selected_icon_content=flet.Icon(flet.icons.SETTINGS),
+                label_content=flet.Text("Settings"),
+            ),
+        ],
+        on_change=lambda e : navigation(e, page=page),
+    )
+
+    def navigation(e: flet.ControlEvent, page: flet.Page):
+
+        global selectedIndex
+        selectedIndex = e.control.selected_index
+
+        if e.control.selected_index == 0:
+            # Home.navigation_rail.selected_index == 0
+            page.go('/home')
+
+        if e.control.selected_index == 1:
+            # Tutorial.navigation_rail.selected_index == 1
+            page.go('/tutorial')
+
+        page.update()
+
+    return navigation_rail 
 
 def main(page: flet.Page):
 
@@ -841,6 +1007,7 @@ def main(page: flet.Page):
         page.update()
 
     def signInError(e: flet.ControlEvent):
+        print('S ERROR')
         try:
             account = database.child('users').order_by_child('email').equal_to(emailSignIn.value).get().val()
             passSignIn.value = None
@@ -1019,7 +1186,6 @@ def main(page: flet.Page):
         ],
         actions_alignment=flet.MainAxisAlignment.SPACE_BETWEEN,
         on_dismiss=signInError,
-            
     )
 
     emailSignIn=flet.TextField(
