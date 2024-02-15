@@ -1,4 +1,5 @@
 flet
 pyrebase
 python-dotenv
+firebase-admin
 requests-toolbelt==0.10.1

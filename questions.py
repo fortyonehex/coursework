@@ -55,7 +55,7 @@ class QuestionGroup():
         return self._store[key]
     
     def __iter__(self):
-        return self._store
+        return iter(self._store)
 
     def __repr__(self):
         return "<QuestionGroup len={}>".format(self.__len__())

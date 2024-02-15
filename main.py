@@ -13,6 +13,8 @@ import authentication
 import urllib.request
 from dotenv import load_dotenv
 
+from questions import *
+
 # Retrieving configuration keys
 
 load_dotenv('.env')
@@ -50,6 +52,9 @@ TERTIARY = '#8D887C'
 ACCENT = '#DD4055'
 BG = '#F2EFE9'
 TEXT = '#2E2F2F'
+
+# pre-initialisation of quiz data
+ability_quiz = parse_qn_data("ability_quiz.json")
 
 # Main app class
 
@@ -682,7 +687,7 @@ class AbilityQuiz(flet.Row):
 
             flet.VerticalDivider(width=1),
 
-            flet.Text("AbilityQuiz")
+            QuestionCard(ability_quiz[0]["sections"][1]).build(page)
         ]
 
 class TargetedPractice(flet.Row):
@@ -791,8 +796,87 @@ def NavigationRail(page):
     return navigation_rail 
 
 class QuestionCard(flet.UserControl):
-    def __init__(self, ):
-        ...
+    def __init__(self, group):
+        self.questions = list(group)
+        self.instructions = group.instructions
+        if type(group) == PassageGroup:
+            self.ispassage = True
+            self.passage = group.text
+        else:
+            self.passage = ""
+            self.ispassage = False
+
+        self.selections = [None]*len(self.questions)
+
+    def build(self, page):
+        self.page = page
+        tabs = []
+        for i in range(len(self.questions)):
+            options = [flet.Text("Q%d) " %(i+1) + self.questions[i].name, weight=flet.FontWeight.BOLD)]
+            answers = []
+            for j in range(len(self.questions[i].options)):
+                options.append(flet.Text("    (%d) %s" %(j+1, self.questions[i].options[j])))
+                answers.append(flet.Segment(value="%d,%d" %(i,j), label=flet.Text(str(j+1))))
+            options.append(flet.SegmentedButton(
+                segments=answers,
+                allow_multiple_selection=False,
+                allow_empty_selection=True,
+                on_change=self.validate
+            ))
+            options.append(flet.Divider(height=1))
+            #print(options)
+            tabs += options
+
+        self.button = flet.ElevatedButton(
+                            text="Next",
+                            disabled=True,
+                            on_click=self.submit
+                        )
+        
+        return flet.Row(controls=
+            [
+                flet.Container(
+                    content=flet.Column(controls=[
+                            flet.Text(self.instructions, weight=flet.FontWeight.BOLD),
+                            flet.Divider(height=1)] + 
+                            [flet.Text(i) for i in self.passage.split("\n")],
+                        expand=True,
+                        width=page.width/2,
+                        scroll=flet.ScrollMode.ALWAYS
+                    ), 
+                    padding=10,
+                    alignment=flet.alignment.top_left
+                ), 
+                flet.VerticalDivider(width=1),
+                flet.Column(
+                    controls=tabs+[self.button],
+                    scroll=flet.ScrollMode.ALWAYS,
+                    spacing=10,
+                    expand=True
+        #                flet.ElevatedButton(
+        #                    text="Next",
+        #                    disabled=True,
+        #                    on_click=self.submit
+        #                )
+                    
+                )
+            ],
+            expand=True,
+        )
+
+    def submit(self, e: flet.ControlEvent):
+        pass
+
+    def validate(self, e: flet.ControlEvent):
+        si, sj = list(e.control.selected)[0].split(",")
+        # print(si, sj)
+        self.selections[int(si)] = int(sj)
+        if None not in self.selections:
+            self.button.disabled = False
+        else:
+            self.button.disabled = True
+        self.page.update()
+
 
 # def main(page: flet.Page):
 

@@ -3,7 +3,7 @@
         {
             "language": "zh",
             "stream": "em3-exp",
-            "grade": 1,
+            "grade": 4,
             "sections": [
                 {
                     "name": "01",
@@ -106,7 +106,7 @@
         {
             "language": "zh",
             "stream": "em3-hcl",
-            "grade": 2,
+            "grade": 4,
             "sections": [
                 {
                     "name": "01",
