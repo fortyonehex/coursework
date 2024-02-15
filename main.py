@@ -777,7 +777,7 @@ def NavigationRail(page):
 
 class QuestionCard(flet.UserControl):
     def __init__(self, ):
-
+        ...
 
 def main(page: flet.Page):
 
