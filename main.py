@@ -117,7 +117,9 @@ class Main(flet.UserControl):
             "/authentication": Authentication,
             "/home": Home,
             "/quiz": AbilityQuiz,
-            "/practise": TargetedPractice
+            "/practise": TargetedPractice,
+            "/tutorial": Tutorial,
+            "/settings": Settings
 
         }[self.page.route](self.page)
 
@@ -146,7 +148,7 @@ class Authentication(flet.Row):
     def __init__(self, page: flet.Page):
         super().__init__()
         print("AUTHENTICATION")
-        self.expand = True
+
         self.imageColumn = flet.Column(
             controls = [
                 flet.Image(
@@ -642,23 +644,46 @@ class Authentication(flet.Row):
             self.emailSignUp.error_text = "Enter a valid email address"
             self.emailSignUp.value, self.passSignUp.value = None, None
             self.page.update()
-
+f = 123
 class Home(flet.Row):
     def __init__(self, page: flet.Page):
         super().__init__()
         print('HOME')
         page.update()
+        self.bgcolor = 'red'
         self.expand = True
         self.alignment = flet.MainAxisAlignment.CENTER
         self.user_id = authentication.authenticate_token(authentication.load_token())
         self.user = authentication.load_user()
         self.user_level = int(database.child(f"users/{self.user_id}/ability_quiz_tries").get().val())
+        global f
+        f = 3
         print(self.user_id)
         page.update()
+        self.bar = flet.AppBar(
+            leading=flet.Icon(flet.icons.PALETTE),
+            leading_width=40,
+            title=flet.Text("AppBar Example"),
+            center_title=False,
+            bgcolor=flet.colors.SURFACE_VARIANT,
+            actions=[
+                flet.IconButton(flet.icons.WB_SUNNY_OUTLINED),
+                flet.IconButton(flet.icons.FILTER_3),
+                flet.PopupMenuButton(
+                    items=[
+                        flet.PopupMenuItem(text="Item 1"),
+                        flet.PopupMenuItem(),  # divider
+                        flet.PopupMenuItem(
+                            text="Checked item", checked=False, on_click=self.check_item_clicked
+                        ),
+                    ]
+                ),
+            ],
+        )
 
         self.lg = flet.ElevatedButton(
             self.user,
-            # on_click=self.logout,
+            on_click=self.logout,
             expand=True
         )
 
@@ -670,84 +695,170 @@ class Home(flet.Row):
             flet.VerticalDivider(width=1),
 
             self.lg,
+
+            flet.ElevatedButton(
+                "Show",
+                # on_click=self.show_bar
+                # on_click=self.tryAdd
+            ),
         ]
 
-class AbilityQuiz(flet.Row):
+        self.navBar = flet.NavigationDrawer(
+            controls=[
+                flet.NavigationDrawerDestination(
+                    icon=flet.icons.ADD_TO_HOME_SCREEN_SHARP, label="Item 1"
+                ),
+                flet.NavigationDrawerDestination(icon=flet.icons.ADD_COMMENT, label="Item 2"),
+            ],
+            on_change=lambda e : print(e.control.selected_index)
+        )
+        page.navigation_bar = self.navBar
+        page.navigation_bar.open == True
+
+    def show_bar(e: flet.ControlEvent):
+        e.control.page.drawer.open = True
+        e.control.page.drawer.update()
+
+    def check_item_clicked(self, e: flet.ControlEvent):
+        e.control.checked = not e.control.checked
+        self.page.update()
+
+    def logout(self, e: flet.ControlEvent):
+        authentication.revoke_token(authentication.load_token())
+        self.page.go('/authentication')
+        Authentication.authTabs.selectedIndex = 0
+
+class AbilityQuiz(flet.Container):
+    ...
+
+class TargetedPractice(flet.Container):
+    ...
+
+class Tutorial(flet.Row):
     def __init__(self, page: flet.Page):
         super().__init__()
-        print('Quiz')
+        print('TUTORIAL')
+        page.update()
+        self.bgcolor = 'red'
         self.expand = True
-        self.navigation_rail = NavigationRail(page)
+        self.alignment = flet.MainAxisAlignment.CENTER
         self.user_id = authentication.authenticate_token(authentication.load_token())
         self.user = authentication.load_user()
-        self.controls=[
+        self.user_level = int(database.child(f"users/{self.user_id}/ability_quiz_tries").get().val())
+        # self.level = 
+        print(self.user_id)
+        page.update()
+        self.bar = flet.AppBar(
+            leading=flet.Icon(flet.icons.PALETTE),
+            leading_width=40,
+            title=flet.Text("AppBar Example"),
+            center_title=False,
+            bgcolor=flet.colors.SURFACE_VARIANT,
+            actions=[
+                flet.IconButton(flet.icons.WB_SUNNY_OUTLINED),
+                flet.IconButton(flet.icons.FILTER_3),
+                flet.PopupMenuButton(
+                    items=[
+                        flet.PopupMenuItem(text="Item 1"),
+                        flet.PopupMenuItem(),  # divider
+                        flet.PopupMenuItem(
+                            text="Checked item", checked=False, on_click=self.check_item_clicked
+                        ),
+                    ]
+                ),
+            ],
+        )
+
+        self.lg = flet.ElevatedButton(
+            "LOG OUT",
+            on_click=self.logout,
+            expand=True
+        )
+
+        self.navigation_rail = NavigationRail(page=page)
+
+        self.controls = [
             self.navigation_rail,
+
             flet.VerticalDivider(width=1),
-            flet.Container(bgcolor="red", content=flet.Text("AQ"))
+
+            self.lg,
+
+            flet.ElevatedButton(
+                "Show",
+                # on_click=self.show_bar
+                # on_click=self.tryAdd
+            ),
         ]
 
-class TargetedPractice(flet.Row):
-    def __init__(self, page: flet.Page):
-        super().__init__()
-        print('Targeted Practice')
-        self.expand = True
-        self.user_id = authentication.authenticate_token(authentication.load_token())
-        self.user = authentication.load_user()
-        self.navigation_rail = NavigationRail(page)
-        new_user = user['ability_quiz_tries'] == 0
-        if new_user:
-            # self.screen = 
-        self.controls=[
-            self.navigation_rail,
-            flet.VerticalDivider(width=1),
-            flet.Container(bgcolor="red", content=flet.Text("TP"))
-        ]
+        self.navBar = flet.NavigationDrawer(
+            controls=[
+                flet.NavigationDrawerDestination(
+                    icon=flet.icons.ADD_TO_HOME_SCREEN_SHARP, label="Item 1"
+                ),
+                flet.NavigationDrawerDestination(icon=flet.icons.ADD_COMMENT, label="Item 2"),
+            ],
+            on_change=lambda e : print(e.control.selected_index)
+        )
+        page.navigation_bar = self.navBar
+        page.navigation_bar.open == True
+
+    def show_bar(e: flet.ControlEvent):
+        e.control.page.drawer.open = True
+        e.control.page.drawer.update()
+
+    def check_item_clicked(self, e: flet.ControlEvent):
+        e.control.checked = not e.control.checked
+        self.page.update()
+
+    def logout(self, e: flet.ControlEvent):
+        authentication.revoke_token(authentication.load_token())
+        self.page.go('/authentication')
+        Authentication.authTabs.selectedIndex = 0
+
+class Settings(flet.Container):
+    ...
 
 def NavigationRail(page):
     global selectedIndex
     navigation_rail = flet.NavigationRail(
         selected_index=selectedIndex,
-        label_type=flet.NavigationRailLabelType.SELECTED,
-        min_width=50,
-        elevation=20,
-        group_alignment=-0.8,
+        label_type=flet.NavigationRailLabelType.ALL,
+        min_width=60,
+        elevation=1,
         indicator_shape=flet.ContinuousRectangleBorder(radius = 20),
         leading=flet.Image(
             src='https://img.freepik.com/free-photo/painting-mountain-lake-with-mountain-background_188544-9126.jpg',
             opacity=0.9,
             fit=flet.ImageFit.COVER,
-            expand=True,
+            expand=False,
             width=50
         ),
-        trailing=flet.Column(
-            controls=[
-            #     flet.IconButton(
-            #         icon="run_circle",
-            #         disabled=True
-            #     ),
-                flet.IconButton(
-                    icon="logout",
-                    on_click=lambda e: logout(e, page=page),
-                )
-            ],
-            alignment="spaceBetween"
+        trailing=flet.IconButton(
+            icon="Settings"
         ),
+        group_alignment=-0.8,
         destinations=[
             flet.NavigationRailDestination(
                 icon=flet.icons.HOUSE_OUTLINED, 
                 selected_icon=flet.icons.HOUSE, 
-                label="Home",
+                label="Home"
             ),
             flet.NavigationRailDestination(
-                icon=flet.icons.QUIZ_OUTLINED,
-                selected_icon=flet.icons.QUIZ,
-                label="Ability Quiz"
+                icon_content=flet.Icon(flet.icons.BOOKMARK_BORDER),
+                selected_icon_content=flet.Icon(flet.icons.BOOKMARK),
+                label="Ability\n Quiz",
             ),
             flet.NavigationRailDestination(
                 icon=flet.icons.SETTINGS_OUTLINED,
-                selected_icon=flet.icons.SETTINGS,
-                label = "Targeted Practise"
-            )
+                selected_icon_content=flet.Icon(flet.icons.SETTINGS),
+                label="Targeted\nPractise"
+            ),
+            flet.NavigationRailDestination(
+                icon=flet.icons.SETTINGS_OUTLINED,
+                selected_icon_content=flet.Icon(flet.icons.SETTINGS),
+                label_content=flet.Text("Settings"),
+            ),
         ],
         on_change=lambda e : navigation(e, page=page),
     )
@@ -758,27 +869,24 @@ def NavigationRail(page):
         selectedIndex = e.control.selected_index
 
         if e.control.selected_index == 0:
+            # Home.navigation_rail.selected_index == 0
             page.go('/home')
 
         if e.control.selected_index == 1:
-            page.go('/quiz')
-        
-        if e.control.selected_index == 2:
-            page.go('/practise')
+            # Tutorial.navigation_rail.selected_index == 1
+            page.go('/tutorial')
 
         page.update()
 
-    def logout(e: flet.ControlEvent, page: flet.Page):
-        authentication.revoke_token(authentication.load_token())
-        page.go('/authentication')
-        Authentication.authTabs.selectedIndex = 0
-
     return navigation_rail 
 
+<<<<<<< Updated upstream
 class QuestionCard(flet.UserControl):
     def __init__(self, ):
         ...
 
+=======
+>>>>>>> Stashed changes
 def main(page: flet.Page):
 
     # Page Configuration
