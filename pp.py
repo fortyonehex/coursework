@@ -1,6 +1,6 @@
 import json
 
-with open("exp.txt") as a:
+with open("qn.txt") as a:
     k = a.read().split("\n")
 
 s = 0

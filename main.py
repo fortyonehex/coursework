@@ -892,14 +892,18 @@ class AbilityQuizCard(flet.UserControl):
     def submit(self, e: flet.ControlEvent):
         self.grade_curr()
         print(self.scores)
+        exp_score_perc = (self.scores[0]+self.scores[1])/(len(self.quiz[0])+len(self.quiz[1]))
+        hcl_score_perc = (self.scores[2]+self.scores[3])/(len(self.quiz[2])+len(self.quiz[3]))
+        exp_grade = "proficient" if exp_score_perc > 0.67 else "mediocre" if exp_score_perc > 0.33 else "lacking"
+        hcl_grade = "proficient" if hcl_score_perc > 0.67 else "mediocre" if hcl_score_perc > 0.33 else "lacking"
 
         del self.controls[0:3]
         self.controls.append(flet.Container(content=flet.Column(controls=[
             flet.Text("You are...", size=20),
-            flet.Text("grade", size=36, weight=flet.FontWeight.BOLD, spans=[flet.TextSpan(
-                " at Express Chinese, and", flet.TextStyle(size=20, weight=flet.FontWeight.NORMAL))]),
-            flet.Text("grade", size=36, weight=flet.FontWeight.BOLD, spans=[flet.TextSpan(
-                " at Higher Chinese", flet.TextStyle(size=20, weight=flet.FontWeight.NORMAL))])
+            flet.Text(exp_grade, size=36, weight=flet.FontWeight.BOLD, spans=[flet.TextSpan(
+                "  in Express Chinese, and", flet.TextStyle(size=20, weight=flet.FontWeight.NORMAL))]),
+            flet.Text(hcl_grade, size=36, weight=flet.FontWeight.BOLD, spans=[flet.TextSpan(
+                "  in Higher Chinese", flet.TextStyle(size=20, weight=flet.FontWeight.NORMAL))])
         ], alignment=flet.alignment.center), margin=100))
         self.page.update()
 
