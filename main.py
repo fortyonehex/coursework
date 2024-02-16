@@ -55,6 +55,7 @@ TEXT = '#2E2F2F'
 
 # pre-initialisation of quiz data
 ability_quiz = parse_qn_data("ability_quiz.json")
+targeted_quiz = parse_qn_data("targeted.json")
 
 # Main app class
 
@@ -1023,7 +1024,7 @@ class TargetedPractice(flet.Row):
         #         )
         #     )
         # else:
-        self.screen = flet.Text("TargetedPractice")
+        self.screen = TargetedPracticeCard(targeted_quiz).build(page)
         
         page.update()
 
@@ -1079,7 +1080,7 @@ def NavigationRail(page):
             flet.NavigationRailDestination(
                 icon="run_circle_outlined",
                 selected_icon="run_circle",
-                label="Targeted Practise"
+                label="Targeted Practice"
             ),
         ],
         on_change=lambda e : navigation(e, page=page),
@@ -1105,7 +1106,6 @@ def NavigationRail(page):
     return navigation_rail 
 
 
-# todo: start test screem
 class AbilityQuizCard(flet.UserControl):
     def __init__(self, quiz):
         self.user_id = authentication.authenticate_token(authentication.load_token())
@@ -1154,8 +1154,7 @@ class AbilityQuizCard(flet.UserControl):
                         ]
                     ),
                     border_radius=20,
-                    expand=True
-
+                    height=120,
                 ),
 
                 flet.Container(
@@ -1179,11 +1178,11 @@ class AbilityQuizCard(flet.UserControl):
                                 # horizontal_alignment='center',
                                 controls=[
                                     flet.Text(
-                                        value="Highest Score for Ability Quiz",
+                                        value="Highest Percentage Mark for Ability Quiz",
                                         color=PRIMARY,
                                     ),
                                 flet. Text(
-                                        value=self.user["ability_quiz_score"],
+                                        value=round(self.user["ability_quiz_score"],1),
                                         color=SECONDARY,
                                         size=20,
                                         weight=flet.FontWeight.W_600
@@ -1199,7 +1198,8 @@ class AbilityQuizCard(flet.UserControl):
                         ]
                     ),
                     border_radius=20,
-                    expand=True
+                    height=120,
+                    #expand=True
                 ),
 
                 flet.DataTable(
@@ -1244,7 +1244,7 @@ class AbilityQuizCard(flet.UserControl):
                         # ),
                     ],
                 ),
-
+                flet.Text("Click the button to start a new ability quiz!\nNote: Note: if you tab out while the ability quiz is ongoing, you will have to redo the quiz."),
                 flet.ElevatedButton(
                     text = 'Start new quiz',
                     on_click=self.start
@@ -1256,7 +1256,7 @@ class AbilityQuizCard(flet.UserControl):
         self.quiz = quiz
 
         self.scores = [None]*len(self.quiz)
-        self.controls = [] # initialise with [self.defaultScreen] and show rest when start quiz is clicked
+        self.controls = [self.defaultScreen] # initialise with [self.defaultScreen] and show rest when start quiz is clicked
 
     def refresh_questions(self):
         self.questions = list(self.quiz[self.state])
@@ -1270,14 +1270,14 @@ class AbilityQuizCard(flet.UserControl):
     def build(self, page):
         self.page = page
         # del self.controls[0]
-        self.refresh_questions()
+        # self.refresh_questions()
         
-        self.controls.append(
-            flet.Column(controls=[
-                flet.Text("Click the button to start the ability quiz!"),
-                flet.Text("Note: if you tab out while the ability quiz is ongoing, you will have to redo the quiz."),
-                flet.FilledButton(text="Start", on_click=self.start)
-            ], alignment=flet.alignment.center, expand=True))
+        #self.controls.append(
+        #    flet.Column(controls=[
+        #        flet.Text("Click the button to start the ability quiz!"),
+        #        flet.Text("Note: if you tab out while the ability quiz is ongoing, you will have to redo the quiz."),
+        #        flet.FilledButton(text="Start", on_click=self.start)
+        #    ], alignment=flet.alignment.center, expand=True))
         return flet.Row(controls=self.controls, width=page.width-50)
 
     def rebuild(self):
@@ -1320,6 +1320,7 @@ class AbilityQuizCard(flet.UserControl):
 
     def start(self, e: flet.ControlEvent):
         del self.controls[0]
+        self.refresh_questions()
         self.rebuild()
         self.page.update()
 
@@ -1363,7 +1364,7 @@ class AbilityQuizCard(flet.UserControl):
 
         del self.controls[0:3]
         self.controls.append(flet.Container(content=flet.Column(controls=[
-            flet.Text("You are...", size=20),
+            flet.Text("You have...", size=20),
             flet.Text(exp_grade, size=36, weight=flet.FontWeight.BOLD, spans=[flet.TextSpan(
                 "  Express Chinese ability (raw percentage %d%%), and" %(round(exp_score_perc*100)), flet.TextStyle(size=20, weight=flet.FontWeight.NORMAL))]),
             flet.Text(hcl_grade, size=36, weight=flet.FontWeight.BOLD, spans=[flet.TextSpan(
@@ -1383,7 +1384,169 @@ class AbilityQuizCard(flet.UserControl):
         
         self.page.update()
 
+class TargetedPracticeCard(flet.UserControl):
+    def __init__(self, quizzes):
+        self.user_id = authentication.authenticate_token(authentication.load_token())
+        self.user = authentication.load_user()
 
+        self.quizzes = quizzes
+        self.quizzes_by_level = {}
+        for quiz in quizzes:
+            if "Secondary "+str(quiz["grade"]) in self.quizzes_by_level:
+                self.quizzes_by_level["Secondary "+str(quiz["grade"])].append(quiz)
+            else:
+                self.quizzes_by_level["Secondary "+str(quiz["grade"])] = [quiz]
+
+        self.leveldropdown = flet.Dropdown(
+            label="Level",
+            width=300,
+            options=[flet.dropdown.Option(key) for key in self.quizzes_by_level], 
+            on_change=self.level_changed
+        )
+
+        self.streamdropdown = flet.Dropdown(
+            label="Stream/subject",
+            width=300,
+            options=[],
+            on_change=self.stream_changed
+        )
+
+        self.passagedropdown = flet.Dropdown(
+            label="Question series/passage",
+            width=300,
+            options=[],
+            on_change=self.passage_changed
+        )
+
+        self.startbutton = flet.FilledButton("Start quiz", disabled=True, on_click=self.start)
+
+        self.defaultScreen = flet.Column(
+            controls=[
+                flet.Text("Please select your level, stream/subject and desired question series/passage in order"),
+                flet.Row(
+                    controls=[
+                        self.leveldropdown,
+                        self.streamdropdown,
+                        self.passagedropdown
+                    ],
+                    spacing=10
+                ),
+                self.startbutton
+            ]
+        )
+        
+        self.quizgroup = None
+
+        # trick to update contents of screen even after displaying
+        self.controls = [self.defaultScreen]
+
+    def level_changed(self, e: flet.ControlEvent):
+        self.passage = None
+        self.streamdropdown.options = [flet.dropdown.Option(group["stream"]) for group in self.quizzes_by_level[self.leveldropdown.value]]
+        self.streamdropdown.value = ""
+        self.passagedropdown.value = ""
+        self.passagedropdown.options = []
+        self.startbutton.disabled = True
+        self.page.update()
+
+    def stream_changed(self, e: flet.ControlEvent):
+        self.passage = None
+        self.selected_stream = None
+        for group in self.quizzes_by_level[self.leveldropdown.value]:
+            if group["stream"] == self.streamdropdown.value:
+                self.selected_stream = group
+                break
+        self.passagedropdown.value = ""
+        self.passagedropdown.options = [flet.dropdown.Option(section.name) for section in self.selected_stream["sections"]]
+        self.startbutton.disabled = True
+        self.page.update()
+
+    def passage_changed(self, e: flet.ControlEvent):
+        self.quizgroup = None
+        for section in self.selected_stream["sections"]:
+            if section.name == self.passagedropdown.value:
+                self.quizgroup = section
+        self.startbutton.disabled = False
+        self.page.update()
+
+    def build(self, page):
+        self.page = page
+        # del self.controls[0]
+        # self.refresh_questions()
+
+        return flet.Row(controls=self.controls, width=page.width-50)
+
+    def rebuild(self):
+        tabs = []
+        self.questions = list(self.quizgroup)
+        self.instructions = self.quizgroup.instructions
+        self.passage = self.quizgroup.text
+
+        for i in range(len(self.questions)):
+            options = [flet.Text("Q%d) " %(i+1) + self.questions[i].name, weight=flet.FontWeight.BOLD)]
+            answers = []
+            for j in range(len(self.questions[i].options)):
+                options.append(flet.Text("    (%d) %s" %(j+1, self.questions[i].options[j])))
+                answers.append(flet.Segment(value="%d,%d" %(i,j), label=flet.Text(str(j+1))))
+            options.append(flet.SegmentedButton(
+                segments=answers,
+                allow_multiple_selection=False,
+                allow_empty_selection=True,
+                on_change=self.validate
+            ))
+            options.append(flet.Divider(height=1))
+            #print(options)
+            tabs += options
+
+        self.button = flet.ElevatedButton(text="Submit", disabled=True, on_click=self.submit)
+        self.controls.append(flet.Container(
+                                    content=flet.Column(controls=[
+                                            flet.Text(self.instructions, weight=flet.FontWeight.BOLD),
+                                            flet.Divider(height=1)] + 
+                                            [flet.Text(i) for i in self.passage.split("\n")],
+                                        expand=True,
+                                        width=self.page.width*0.5,
+                                        scroll=flet.ScrollMode.ALWAYS
+                                    ), 
+                                   # padding=10,
+                                    alignment=flet.alignment.top_left
+                                ))
+        self.controls.append(flet.VerticalDivider(width=1))
+        self.controls.append(flet.Column(
+                                    controls=tabs+[self.button],
+                                    scroll=flet.ScrollMode.ALWAYS,
+                                    expand=True
+                                ))
+
+    def start(self, e: flet.ControlEvent):
+        del self.controls[0]
+        self.selections = [None]*len(self.quizgroup)
+        self.rebuild()
+        self.page.update()
+
+    def grade_curr(self):
+        curr_score = self.quiz[self.state].grade(self.selections)
+        self.scores[self.state] = curr_score
+
+    def validate(self, e: flet.ControlEvent):
+        print(e.control.selected)
+        si, sj = list(e.control.selected)[0].split(",")
+        # print(si, sj)
+        self.selections[int(si)] = int(sj)
+        if None not in self.selections:
+            self.button.disabled = False
+        else:
+            self.button.disabled = True
+        self.page.update()
+
+    def submit(self, e: flet.ControlEvent):
+        total_score = self.quizgroup.grade(self.selections)
+        question_analysis = self.quizgroup.grade_detailed(self.selections)
+        print(self.question_analysis)
+
+        del self.controls[0:3]
+        self.controls.append(flet.Text(repr(question_analysis)))
+        self.page.update()
 
 if __name__  ==  "__main__":
     flet.app(target = Main, view = flet.FLET_APP)

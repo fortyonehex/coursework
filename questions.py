@@ -1,3 +1,5 @@
+# Bobby Lee
+
 import json
 
 # Question class -- represents a singular question
@@ -48,11 +50,16 @@ class QuestionGroup():
         for qn in questions_object:
             self._store.append(Question(qn["question"], qn["options"], qn["options"][qn["answer"]], qn["answer"]))
 
+    # only gives a numerical result grade, which is useful in certain applications
     def grade(self, questions):
         score = 0
         for i in range(len(questions)):
             score += int(self._store[i].validate(questions[i]))
         return score
+
+    # returns a list of 0 and 1 with 1 being a correct answer and 0 being an incorrect answer
+    def grade_detailed(self, questions):
+        return [int(self._store[i].validate(questions[i])) for i in range(len(questions))]
 
     def __len__(self):
         return len(self._store)
