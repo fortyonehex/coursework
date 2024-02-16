@@ -128,6 +128,7 @@ class Main(flet.UserControl):
         self.page.views.append(
             flet.View(route, [new_page])
         )
+        self.page.update()
     
     # def view_pop(self, e: flet.ViewPopEvent):
     #     self.page.views.pop()
@@ -294,25 +295,6 @@ class Authentication(flet.Row):
             expand=True
         )
 
-        self.levelSelection = flet.Dropdown(
-            label="Level",
-            options=[
-                flet.dropdown.Option('1'),
-                flet.dropdown.Option('2'),
-                flet.dropdown.Option('3'),
-                flet.dropdown.Option('4'),
-            ],
-            dense=True,
-            color=TEXT,
-            text_size=17,
-            border_color=SECONDARY,
-            focused_border_color=SECONDARY,
-            focused_color=SECONDARY,
-            expand=True,
-            prefix=flet.Text('Secondary '),
-            on_change=self.validate_signUp,
-        )
-
         self.tcCheckbox = flet.Checkbox(
             label="By signing up for an account, I agree to the Terms and Conditions",
             label_position='right',
@@ -435,7 +417,6 @@ class Authentication(flet.Row):
                                                         flet.Row(
                                                             controls=[
                                                                 self.mtSelection,
-                                                                self.levelSelection,
                                                             ],
                                                             alignment=flet.MainAxisAlignment.SPACE_BETWEEN,
                                                             spacing=10
@@ -586,7 +567,7 @@ class Authentication(flet.Row):
             self.page.update()
 
     def clearSignUp(self, e: flet.ControlEvent):
-        self.emailSignUp.value, self.passSignUp.value, self.mtSelection.value, self.levelSelection.value, self.tcCheckbox.value = None, None, None, None, None
+        self.emailSignUp.value, self.passSignUp.value, self.mtSelection.value, self.tcCheckbox.value = None, None, None, None, None
         self.page.update()
 
     def signUpToSignIn(self, e: flet.ControlEvent):
@@ -636,7 +617,7 @@ class Authentication(flet.Row):
         try:
             account = database.child('users').order_by_child('email').equal_to(self.emailSignUp.value).get().val()
             print('GOT A')
-            self.emailSignUp.value, self.passSignUp.value, self.mtSelection.value, self.levelSelection.value, self.tcCheckbox.value = None, None, None, None, None
+            self.emailSignUp.value, self.passSignUp.value, self.mtSelection.value, self.tcCheckbox.value = None, None, None, None, None
             self.emailSignUp.error_text = "Account already exists. Sign in instead."
             self.page.update()
         except:
@@ -655,7 +636,6 @@ class Home(flet.Row):
         self.user_id = authentication.authenticate_token(authentication.load_token())
         self.user = authentication.load_user()
         self.current_user_name = authentication.get_name(authentication.load_token())
-        self.user_level = int(database.child(f"users/{self.user_id}/ability_quiz_tries").get().val())
 
         print(self.user_id)
         page.update()
@@ -682,7 +662,7 @@ class Home(flet.Row):
                             flet.Text(
                                 value="Hello,",
                                 size=30,
-                                color='#5a5c69',
+                                color=TERTIARY,
                                 weight=flet.FontWeight.W_300
 
                             ),
@@ -697,188 +677,297 @@ class Home(flet.Row):
                     ),
 
                     flet.Text("Personal Achievements", style=flet.TextThemeStyle.TITLE_LARGE, weight="bold"),
+
+                    flet.Column(
+                        controls = [
+                            flet.Row(
+                                controls=[
+                                    flet.Container(
+                                        padding=20,
+                                        alignment=flet.alignment.center,
+                                        bgcolor='white',
+                                        shadow=flet.BoxShadow(
+                                            blur_radius=1,
+                                            color=TEXT
+                                        ),
+                                        border=flet.border.only(
+                                            left=flet.border.BorderSide(10, color=SECONDARY),
+                                            right=flet.border.BorderSide(10, color=SECONDARY)
+                                        ),
+                                        content=flet.Row(
+                                            alignment='spaceBetween',
+                                            vertical_alignment='center',
+                                            controls=[
+                                                flet.Column(
+                                                    spacing=0,
+                                                    alignment='center',
+                                                    # horizontal_alignment='center',
+                                                    controls=[
+                                                        flet.Text(
+                                                            value="Express Chinese Proficiency",
+                                                            color=PRIMARY,
+                                                        ),
+                                                    flet. Text(
+                                                            value=self.user['express_proficiency'],
+                                                            color=SECONDARY,
+                                                            size=20,
+                                                            weight=flet.FontWeight.W_600
+                                                        )
+                                                    ]
+                                                ),
+                                                flet.Icon(
+                                                    "bar_chart",
+                                                    color='#dddfeb',
+                                                    size=40
+                                                )
+                                            ]
+                                        ),
+                                        border_radius=20,
+                                        expand=True
+
+                                    ),
+
+                                    flet.VerticalDivider(
+                                        width = 5,
+                                        color="green"
+                                    ),
+
+                                    flet.Container(
+                                        padding=20,
+                                        alignment=flet.alignment.center,
+                                        bgcolor='white',
+                                        shadow=flet.BoxShadow(
+                                            blur_radius=1,
+                                            color=TEXT
+                                        ),
+                                        border=flet.border.only(
+                                            left=flet.border.BorderSide(10, color=SECONDARY),
+                                            right=flet.border.BorderSide(10, color=SECONDARY)
+                                        ),
+                                        content=flet.Row(
+                                            alignment='spaceBetween',
+                                            vertical_alignment='center',
+                                            controls=[
+                                                flet.Column(
+                                                    spacing=0,
+                                                    alignment='center',
+                                                    # horizontal_alignment='center',
+                                                    controls=[
+                                                        flet.Text(
+                                                            value="Higher Chinese Proficiency",
+                                                            color=PRIMARY,
+                                                        ),
+                                                    flet. Text(
+                                                            value=self.user["higher_proficiency"],
+                                                            color=SECONDARY,
+                                                            size=20,
+                                                            weight=flet.FontWeight.W_600
+                                                        )
+                                                    ]
+                                                ),
+                                                flet.Icon(
+                                                    "add_chart",
+                                                    color='#dddfeb',
+                                                    size=40
+                                                )
+                                            ]
+                                        ),
+                                        border_radius=20,
+                                        expand=True
+                                    )
+                                ],
+                                # alignment="spaceBetween",
+                                spacing = 100
+                                
+                            ),
+
+                            flet.Row(
+                                controls=[
+                                    flet.Container(
+                                        padding=20,
+                                        alignment=flet.alignment.center,
+                                        bgcolor='white',
+                                        shadow=flet.BoxShadow(
+                                            blur_radius=1,
+                                            color=TEXT
+                                        ),
+                                        border=flet.border.only(
+                                            top=flet.border.BorderSide(2, color='yellow'),
+                                            bottom=flet.border.BorderSide(2, color='yellow')),
+                                        content=flet.Row(
+                                            alignment='spaceBetween',
+                                            vertical_alignment='center',
+                                            controls=[
+                                                flet.Column(
+                                                    spacing=0,
+                                                    alignment='center',
+                                                    # horizontal_alignment='center',
+                                                    controls=[
+                                                        flet.Text(
+                                                            value="Attempts of Ability Quiz",
+                                                            color=PRIMARY,
+                                                        ),
+                                                    flet. Text(
+                                                            value=self.user['ability_quiz_tries'],
+                                                            color=SECONDARY,
+                                                            size=20,
+                                                            weight=flet.FontWeight.W_600
+                                                        )
+                                                    ]
+                                                ),
+                                                flet.Icon(
+                                                    "quiz_outlined",
+                                                    color='yellow400',
+                                                    size=40,
+                                                    opacity=0.5
+                                                )
+                                            ]
+                                        ),
+                                        border_radius=20
                     
-                    flet.Row(
-                        controls=[
-                            flet.Container(
-                                padding=30,
-                                alignment=flet.alignment.center,
-                                bgcolor='white',
-                                shadow=flet.BoxShadow(
-                                    # spread_radius=1,
-                                    blur_radius=10,
-                                    color=TEXT
-                                ),
-                                border=flet.border.only(
-                                    left=flet.border.BorderSide(5, color='yellow')),
-                                content=flet.Row(
-                                    alignment='spaceBetween',
-                                    vertical_alignment='center',
-                                    controls=[
-                                        flet.Column(
-                                            spacing=0,
-                                            alignment='center',
-                                            # horizontal_alignment='center',
+
+                                    ),
+
+                                    flet.Container(
+                                        padding=20,
+                                        alignment=flet.alignment.center,
+                                        bgcolor='white',
+                                        shadow=flet.BoxShadow(
+                                            blur_radius=1,
+                                            color=TEXT
+                                        ),
+                                        border=flet.border.only(
+                                            top=flet.border.BorderSide(2, color='green'),
+                                            bottom=flet.border.BorderSide(2, color='green')),
+                                        content=flet.Row(
+                                            alignment='spaceBetween',
+                                            vertical_alignment='center',
                                             controls=[
-                                                flet.Text(
-                                                    value="Attempts of Ability Quiz",
-                                                    color=PRIMARY,
+                                                flet.Column(
+                                                    spacing=0,
+                                                    alignment='center',
+                                                    # horizontal_alignment='center',
+                                                    controls=[
+                                                        flet.Text(
+                                                            value="Highest Score for Ability Quiz",
+                                                            color=PRIMARY,
+                                                        ),
+                                                    flet. Text(
+                                                            value=self.user["ability_quiz_score"],
+                                                            color=SECONDARY,
+                                                            size=20,
+                                                            weight=flet.FontWeight.W_600
+                                                        )
+                                                    ]
                                                 ),
-                                               flet. Text(
-                                                    value=self.user['ability_quiz_tries'],
-                                                    color=SECONDARY,
-                                                    size=25,
-                                                    weight=flet.FontWeight.W_600
+                                                flet.Icon(
+                                                    "numbers_outlined",
+                                                    color='green400',
+                                                    size=40,
+                                                    opacity=0.5
                                                 )
                                             ]
                                         ),
-                                        flet.Icon(
-                                            "quiz_outlined",
-                                            color='#dddfeb',
-                                            size=50
-                                        )
-                                    ]
-                                ),
-                                border_radius=20
-            
+                                        border_radius=20
 
-                            ),
+                                    ),
 
-                            flet.Container(
-                                padding=30,
-                                alignment=flet.alignment.center,
-                                bgcolor='white',
-                                shadow=flet.BoxShadow(
-                                    # spread_radius=1,
-                                    blur_radius=10,
-                                    color=TEXT
-                                ),
-                                border=flet.border.only(
-                                    left=flet.border.BorderSide(5, color='green')),
-                                content=flet.Row(
-                                    alignment='spaceBetween',
-                                    vertical_alignment='center',
-                                    controls=[
-                                        flet.Column(
-                                            spacing=0,
-                                            alignment='center',
-                                            # horizontal_alignment='center',
+                                    flet.Container(
+                                        padding=20,
+                                        alignment=flet.alignment.center,
+                                        bgcolor='white',
+                                        shadow=flet.BoxShadow(
+                                            blur_radius=1,
+                                            color=TEXT
+                                        ),
+                                        border=flet.border.only(
+                                            top=flet.border.BorderSide(2, color='blue'),
+                                            bottom=flet.border.BorderSide(2, color='blue')),
+                                        content=flet.Row(
+                                            alignment='spaceBetween',
+                                            vertical_alignment='center',
                                             controls=[
-                                                flet.Text(
-                                                    value="Highest Score for Ability Quiz",
-                                                    color=PRIMARY,
+                                                flet.Column(
+                                                    spacing=0,
+                                                    alignment='center',
+                                                    # horizontal_alignment='center',
+                                                    controls=[
+                                                        flet.Text(
+                                                            value="Attempts of Targeted Practice",
+                                                            color=PRIMARY,
+                                                        ),
+                                                    flet. Text(
+                                                            value=self.user["targeted_practice_tries"],
+                                                            color=SECONDARY,
+                                                            size=20,
+                                                            weight=flet.FontWeight.W_600
+                                                        )
+                                                    ]
                                                 ),
-                                               flet. Text(
-                                                    value=self.user["ability_quiz_score"],
-                                                    color=SECONDARY,
-                                                    size=25,
-                                                    weight=flet.FontWeight.W_600
+                                                flet.Icon(
+                                                    "run_circle_outlined",
+                                                    color='blue400',
+                                                    size=40,
+                                                    opacity=0.5
                                                 )
                                             ]
                                         ),
-                                        flet.Icon(
-                                            "numbers_outlined",
-                                            color='#dddfeb',
-                                            size=50
-                                        )
-                                    ]
-                                ),
-                                border_radius=20
+                                        border_radius=20
+                                    ),
 
-                            ),
-
-                            flet.Container(
-                                padding=30,
-                                alignment=flet.alignment.center,
-                                bgcolor='white',
-                                shadow=flet.BoxShadow(
-                                    # spread_radius=1,
-                                    blur_radius=10,
-                                    color=TEXT
-                                ),
-                                border=flet.border.only(
-                                    left=flet.border.BorderSide(5, color='blue')),
-                                content=flet.Row(
-                                    alignment='spaceBetween',
-                                    vertical_alignment='center',
-                                    controls=[
-                                        flet.Column(
-                                            spacing=0,
-                                            alignment='center',
-                                            # horizontal_alignment='center',
+                                    flet.Container(
+                                        padding=20,
+                                        alignment=flet.alignment.center,
+                                        bgcolor='white',
+                                        shadow=flet.BoxShadow(
+                                            blur_radius=1,
+                                            color=TEXT
+                                        ),
+                                        border=flet.border.only(
+                                            top=flet.border.BorderSide(2, color='red'),
+                                            bottom=flet.border.BorderSide(2, color='red')),
+                                        content=flet.Row(
+                                            alignment='spaceBetween',
+                                            vertical_alignment='center',
                                             controls=[
-                                                flet.Text(
-                                                    value="Attempts of Targeted Practice",
-                                                    color=PRIMARY,
+                                                flet.Column(
+                                                    spacing=0,
+                                                    alignment='center',
+                                                    # horizontal_alignment='center',
+                                                    controls=[
+                                                        flet.Text(
+                                                            value="Competency of Targeted Practice",
+                                                            color=PRIMARY,
+                                                        ),
+                                                    flet. Text(
+                                                            value=self.user["targeted_practice_level"],
+                                                            color=SECONDARY,
+                                                            size=20,
+                                                            weight=flet.FontWeight.W_600
+                                                        )
+                                                    ]
                                                 ),
-                                               flet. Text(
-                                                    value=self.user["targeted_practice_tries"],
-                                                    color=SECONDARY,
-                                                    size=25,
-                                                    weight=flet.FontWeight.W_600
+                                                flet.Icon(
+                                                    "numbers",
+                                                    color='red400',
+                                                    size=40,
+                                                    opacity=0.5
                                                 )
                                             ]
                                         ),
-                                        flet.Icon(
-                                            "run_circle_outlined",
-                                            color='#dddfeb',
-                                            size=50
-                                        )
-                                    ]
-                                ),
-                                border_radius=20
-                            ),
-
-                            flet.Container(
-                                padding=30,
-                                alignment=flet.alignment.center,
-                                bgcolor='white',
-                                shadow=flet.BoxShadow(
-                                    # spread_radius=1,
-                                    blur_radius=10,
-                                    color=TEXT
-                                ),
-                                border=flet.border.only(
-                                    left=flet.border.BorderSide(5, color='red')),
-                                content=flet.Row(
-                                    alignment='spaceBetween',
-                                    vertical_alignment='center',
-                                    controls=[
-                                        flet.Column(
-                                            spacing=0,
-                                            alignment='center',
-                                            # horizontal_alignment='center',
-                                            controls=[
-                                                flet.Text(
-                                                    value="Competency of Targeted Practice",
-                                                    color=PRIMARY,
-                                                ),
-                                               flet. Text(
-                                                    value=self.user["targeted_practice_level"],
-                                                    color=SECONDARY,
-                                                    size=25,
-                                                    weight=flet.FontWeight.W_600
-                                                )
-                                            ]
-                                        ),
-                                        flet.Icon(
-                                            "numbers",
-                                            color='#dddfeb',
-                                            size=50
-                                        )
-                                    ]
-                                ),
-                                border_radius=20
-                            ),
+                                        border_radius=20
+                                    ),
+                                ],
+                                wrap=True,
+                                expand=True
+                            )
                         ],
-                        wrap=True,
-                        expand=True
-                    )
-                    
+                        spacing = 50
+                    ),
                 ],
                 spacing = 30,
                 expand=True
-            )
+            ),
         ]
 
         self.spacing = 20
@@ -962,11 +1051,12 @@ def NavigationRail(page):
         label_type=flet.NavigationRailLabelType.ALL,
         min_width=60,
         elevation=5,
+        indicator_color=TERTIARY,
         indicator_shape=flet.ContinuousRectangleBorder(radius = 20),
         leading=flet.Image(
-            src='https://img.freepik.com/free-photo/painting-mountain-lake-with-mountain-background_188544-9126.jpg',
+            src='/Users/kavinjayakumar/Documents/GitHub/coursework/logo.png',
             opacity=0.9,
-            fit=flet.ImageFit.COVER,
+            fit=flet.ImageFit.CONTAIN,
             expand=False,
             width=50
         ),
@@ -987,12 +1077,13 @@ def NavigationRail(page):
                 label="Ability Quiz",
             ),
             flet.NavigationRailDestination(
-                icon=flet.icons.SETTINGS_OUTLINED,
-                selected_icon=flet.icons.SETTINGS,
+                icon="run_circle_outlined",
+                selected_icon="run_circle",
                 label="Targeted Practise"
             ),
         ],
         on_change=lambda e : navigation(e, page=page),
+        bgcolor=BG
     )
 
     def navigation(e: flet.ControlEvent, page: flet.Page):
@@ -1015,11 +1106,155 @@ def NavigationRail(page):
 
 class AbilityQuizCard(flet.UserControl):
     def __init__(self, quiz):
+        self.user_id = authentication.authenticate_token(authentication.load_token())
+        self.user = authentication.load_user()
+
+        self.defaultScreen = flet.Column(
+            controls=[
+                flet.Container(
+                    padding=30,
+                    alignment=flet.alignment.center,
+                    bgcolor='white',
+                    shadow=flet.BoxShadow(
+                        blur_radius=1,
+                        color=TEXT
+                    ),
+                    border=flet.border.only(
+                        top=flet.border.BorderSide(2, color='red'),
+                        bottom=flet.border.BorderSide(2, color='red')),
+                    content=flet.Row(
+                        alignment='spaceBetween',
+                        vertical_alignment='center',
+                        controls=[
+                            flet.Column(
+                                spacing=0,
+                                alignment='center',
+                                # horizontal_alignment='center',
+                                controls=[
+                                    flet.Text(
+                                        value="Attempts of Ability Quiz",
+                                        color=PRIMARY,
+                                    ),
+                                flet. Text(
+                                        value=self.user['ability_quiz_tries'],
+                                        color=SECONDARY,
+                                        size=20,
+                                        weight=flet.FontWeight.W_600
+                                    )
+                                ]
+                            ),
+                            flet.Icon(
+                                "quiz_outlined",
+                                color='red400',
+                                size=40,
+                                opacity=0.5
+                            )
+                        ]
+                    ),
+                    border_radius=20,
+                    expand=True
+
+                ),
+
+                flet.Container(
+                    padding=30,
+                    alignment=flet.alignment.center,
+                    bgcolor='white',
+                    shadow=flet.BoxShadow(
+                        blur_radius=1,
+                        color=TEXT
+                    ),
+                    border=flet.border.only(
+                        top=flet.border.BorderSide(2, color='green'),
+                        bottom=flet.border.BorderSide(2, color='green')),
+                    content=flet.Row(
+                        alignment='spaceBetween',
+                        vertical_alignment='center',
+                        controls=[
+                            flet.Column(
+                                spacing=0,
+                                alignment='center',
+                                # horizontal_alignment='center',
+                                controls=[
+                                    flet.Text(
+                                        value="Highest Score for Ability Quiz",
+                                        color=PRIMARY,
+                                    ),
+                                flet. Text(
+                                        value=self.user["ability_quiz_score"],
+                                        color=SECONDARY,
+                                        size=20,
+                                        weight=flet.FontWeight.W_600
+                                    )
+                                ]
+                            ),
+                            flet.Icon(
+                                "numbers_outlined",
+                                color='green400',
+                                size=40,
+                                opacity=0.5
+                            )
+                        ]
+                    ),
+                    border_radius=20,
+                    expand=True
+                ),
+
+                flet.DataTable(
+                    columns=[
+                        flet.DataColumn(flet.Text("No."), numeric=True),
+                        flet.DataColumn(flet.Text("Question")),
+                        flet.DataColumn(flet.Text("Your answer"), numeric=True),
+                        flet.DataColumn(flet.Text("Correct answer"), numeric=True),
+                    ],
+                    rows=[
+
+                        # DISPLAY LATEST DATA BELOW USING: database.child(f'users/{self.user_id}/aq_latest_attempt').get().val()
+
+                        # Qn 1
+                        # flet.DataRow(
+                        #     cells=[
+                        #         flet.DataCell(flet.Text("John")),
+                        #         flet.DataCell(flet.Text("Smith")),
+                        #         flet.DataCell(flet.Text("43")),
+                        #         flet.DataCell(flet.Text("43")),
+                        #     ],
+                        # ),
+
+                        # Qn 2
+                        # flet.DataRow(
+                        #     cells=[
+                        #         flet.DataCell(flet.Text("Jack")),
+                        #         flet.DataCell(flet.Text("Brown")),
+                        #         flet.DataCell(flet.Text("19")),
+                        #         flet.DataCell(flet.Text("43")),
+                        #     ],
+                        # ),
+
+                        # Qn 3 etc.
+                        # flet.DataRow(
+                        #     cells=[
+                        #         flet.DataCell(flet.Text("Alice")),
+                        #         flet.DataCell(flet.Text("Wong")),
+                        #         flet.DataCell(flet.Text("25")),
+                        #         flet.DataCell(flet.Text("43")),
+                        #     ],
+                        # ),
+                    ],
+                ),
+
+                flet.ElevatedButton(
+                    text = 'Start new quiz',
+                    on_click=self.startQuiz
+                )
+            ]
+        )
+
         self.state = 0
         self.quiz = quiz
 
         self.scores = [None]*len(self.quiz)
-        self.controls = []
+        self.controls = [] # initialise with [self.defaultScreen] and show rest when start quiz is clicked
 
     def refresh_questions(self):
         self.questions = list(self.quiz[self.state])
@@ -1032,10 +1267,11 @@ class AbilityQuizCard(flet.UserControl):
 
     def build(self, page):
         self.page = page
+        # del self.controls[0]
         self.refresh_questions()
         self.rebuild()
         
-        return flet.Row(controls=self.controls, width=page.width)
+        return flet.Row(controls=self.controls, width=page.width-50)
 
     def rebuild(self):
         tabs = []
@@ -1062,7 +1298,7 @@ class AbilityQuizCard(flet.UserControl):
                                             flet.Divider(height=1)] + 
                                             [flet.Text(i) for i in self.passage.split("\n")],
                                         expand=True,
-                                        width=self.page.width*0.3,
+                                        width=self.page.width*0.5,
                                         scroll=flet.ScrollMode.ALWAYS
                                     ), 
                                    # padding=10,
@@ -1074,6 +1310,10 @@ class AbilityQuizCard(flet.UserControl):
                                     scroll=flet.ScrollMode.ALWAYS,
                                     expand=True
                                 ))
+
+    def startQuiz(self, e: flet.ControlEvent):
+        # Delete existing controls to add quiz controls
+        ...
 
     def nextpage(self, e: flet.ControlEvent):
         self.grade_curr()
@@ -1110,8 +1350,8 @@ class AbilityQuizCard(flet.UserControl):
         print(self.scores)
         exp_score_perc = (self.scores[0]+self.scores[1])/(len(self.quiz[0])+len(self.quiz[1]))
         hcl_score_perc = (self.scores[2]+self.scores[3])/(len(self.quiz[2])+len(self.quiz[3]))
-        exp_grade = "proficient" if exp_score_perc > 0.67 else "mediocre" if exp_score_perc > 0.33 else "lacking"
-        hcl_grade = "proficient" if hcl_score_perc > 0.67 else "mediocre" if hcl_score_perc > 0.33 else "lacking"
+        exp_grade = "Proficient" if exp_score_perc > 0.67 else "Competent" if exp_score_perc > 0.33 else "Fair"
+        hcl_grade = "Proficient" if hcl_score_perc > 0.67 else "Competent" if hcl_score_perc > 0.33 else "Fair"
 
         del self.controls[0:3]
         self.controls.append(flet.Container(content=flet.Column(controls=[
@@ -1120,10 +1360,22 @@ class AbilityQuizCard(flet.UserControl):
                 "  in Express Chinese, and", flet.TextStyle(size=20, weight=flet.FontWeight.NORMAL))]),
             flet.Text(hcl_grade, size=36, weight=flet.FontWeight.BOLD, spans=[flet.TextSpan(
                 "  in Higher Chinese", flet.TextStyle(size=20, weight=flet.FontWeight.NORMAL))])
-        ], alignment=flet.alignment.center), margin=100))
+        ], alignment=flet.alignment.center),))
         self.page.update()
 
-        # do some cloud shit here idk kavin pls fix
+        database.child(f'users/{self.user_id}/express_proficiency').set(exp_grade)
+        database.child(f'users/{self.user_id}/higher_proficiency').set(hcl_grade)
+        database.child(f'users/{self.user_id}/ability_quiz_tries').set(int(self.user['ability_quiz_tries'])+1)
+        database.child(f'users/{self.user_id}/ability_quiz_score').set(exp_score_perc*100 if exp_score_perc*100 > self.user['ability_quiz_score'] else (hcl_score_perc*100 if hcl_score_perc*100 > self.user['ability_quiz_score'] else None))
+        # TODO: database.child(f'users/{self.user_id}/aq_latest_attempt').update({PASS SOMETHING HERE TO DISPLAY IN AbilityQuiz view}) -> Can be any object
+
+        # End quiz
+
+            # Delete quiz controls and add self.defaultScreen
+        
+        self.page.update()
+
+
 
 if __name__  ==  "__main__":
     flet.app(target = Main, view = flet.FLET_APP)

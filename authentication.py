@@ -18,7 +18,7 @@ auth = firebase.auth()
 database = firebase.database()
 
 
-def create_user(email, password, motherTongue, level):
+def create_user(email, password, motherTongue):
     try:
         print('CR')
         user = dict(auth.create_user_with_email_and_password(email, password))
@@ -29,10 +29,12 @@ def create_user(email, password, motherTongue, level):
             'display_name': user['displayName'],
             'email': email,
             'mother_tongue': motherTongue,
-            'level': level,
+            'express_proficiency': "Novice",
+            'higher_proficiency': "Novice",
             'ability_quiz_tries': 0,
+            'aq_latest_attempt': None,
             'ability_quiz_score': 0,
-            'targeted_practice_level': 0,
+            'tp_latest_attempt': None,
             'targeted_practice_tries': 0,
         })
         print('SET')
@@ -83,7 +85,7 @@ def load_user():
         print('D 2')
         print(user)
         print(info)
-        return user
+        return dict(user)
     except:
         print('FAIL')
         return None
