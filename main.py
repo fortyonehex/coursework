@@ -1104,6 +1104,8 @@ def NavigationRail(page):
 
     return navigation_rail 
 
+
+# todo: start test screem
 class AbilityQuizCard(flet.UserControl):
     def __init__(self, quiz):
         self.user_id = authentication.authenticate_token(authentication.load_token())
@@ -1245,7 +1247,7 @@ class AbilityQuizCard(flet.UserControl):
 
                 flet.ElevatedButton(
                     text = 'Start new quiz',
-                    on_click=self.startQuiz
+                    on_click=self.start
                 )
             ]
         )
@@ -1269,8 +1271,13 @@ class AbilityQuizCard(flet.UserControl):
         self.page = page
         # del self.controls[0]
         self.refresh_questions()
-        self.rebuild()
         
+        self.controls.append(
+            flet.Column(controls=[
+                flet.Text("Click the button to start the ability quiz!"),
+                flet.Text("Note: if you tab out while the ability quiz is ongoing, you will have to redo the quiz."),
+                flet.FilledButton(text="Start", on_click=self.start)
+            ], alignment=flet.alignment.center, expand=True))
         return flet.Row(controls=self.controls, width=page.width-50)
 
     def rebuild(self):
@@ -1311,9 +1318,10 @@ class AbilityQuizCard(flet.UserControl):
                                     expand=True
                                 ))
 
-    def startQuiz(self, e: flet.ControlEvent):
-        # Delete existing controls to add quiz controls
-        ...
+    def start(self, e: flet.ControlEvent):
+        del self.controls[0]
+        self.rebuild()
+        self.page.update()
 
     def nextpage(self, e: flet.ControlEvent):
         self.grade_curr()
@@ -1357,10 +1365,10 @@ class AbilityQuizCard(flet.UserControl):
         self.controls.append(flet.Container(content=flet.Column(controls=[
             flet.Text("You are...", size=20),
             flet.Text(exp_grade, size=36, weight=flet.FontWeight.BOLD, spans=[flet.TextSpan(
-                "  in Express Chinese, and", flet.TextStyle(size=20, weight=flet.FontWeight.NORMAL))]),
+                "  Express Chinese ability (raw percentage %d%%), and" %(round(exp_score_perc*100)), flet.TextStyle(size=20, weight=flet.FontWeight.NORMAL))]),
             flet.Text(hcl_grade, size=36, weight=flet.FontWeight.BOLD, spans=[flet.TextSpan(
-                "  in Higher Chinese", flet.TextStyle(size=20, weight=flet.FontWeight.NORMAL))])
-        ], alignment=flet.alignment.center),))
+                "  Higher Chinese ability (raw percentage %d%%)" %(round(hcl_score_perc*100)), flet.TextStyle(size=20, weight=flet.FontWeight.NORMAL))])
+        ], alignment=flet.alignment.center)))
         self.page.update()
 
         database.child(f'users/{self.user_id}/express_proficiency').set(exp_grade)
