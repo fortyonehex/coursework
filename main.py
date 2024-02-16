@@ -1,13 +1,8 @@
 # Imports
 import os
 import re
-import sys
 import flet
-import time
-import base64
 import pickle
-import random
-import asyncio
 import pyrebase
 import authentication
 import urllib.request
@@ -22,6 +17,7 @@ load_dotenv('.env')
 firebaseConfig = eval(os.getenv('CONFIG'))
 
 # Check internet access
+# Done by Kavin
 
 def connect(host='http://google.com'):
     try:
@@ -58,13 +54,13 @@ ability_quiz = parse_qn_data("ability_quiz.json")
 targeted_quiz = parse_qn_data("targeted.json")
 
 # Main app class
-
+# Done by Kavin
 class Main(flet.UserControl):
     def __init__(self, page: flet.Page):
         super().__init__()
         self.page = page
         self.init()
-        print(page.views,"\n\n\n")
+        # print(page.views,"\n\n\n")
         page.title = "Unolingo"
         page.theme_mode = "light"
         page.window_width = 1440
@@ -104,6 +100,8 @@ class Main(flet.UserControl):
 
         # checkICStatus()
     
+    # initialisation of main page
+    # changes depending if session is available
     def init(self):
         self.page.on_route_change = self.on_route_change
         # self.page.on_view_pop = self.view_pop
@@ -116,13 +114,14 @@ class Main(flet.UserControl):
         else:
             self.page.go('/authentication')
     
+    # routing handler for whole app
+    # done by Sai
     def on_route_change(self, route: flet.RouteChangeEvent):
         new_page = {
             "/authentication": Authentication,
             "/home": Home,
             "/quiz": AbilityQuiz,
             "/practise": TargetedPractice
-
         }[self.page.route](self.page)
 
         self.page.views.clear()
@@ -145,11 +144,14 @@ class Main(flet.UserControl):
         except:
             return None
 
+# Done by Kavin
+# authentication screen
 class Authentication(flet.Row):
     def __init__(self, page: flet.Page):
         super().__init__()
-        print("AUTHENTICATION")
+        # print("AUTHENTICATION") # debug
 
+        # declaring layout elements before use
         self.imageColumn = flet.Column(
             controls = [
                 flet.Image(
@@ -163,7 +165,6 @@ class Authentication(flet.Row):
         )
 
         # Sign In
-
         self.signInErrorDialog = flet.AlertDialog(
             modal=True,
             title=flet.Text("Invalid credentials", style=flet.TextThemeStyle.LABEL_LARGE, size=20),
@@ -233,7 +234,6 @@ class Authentication(flet.Row):
         )
 
         # Sign Up
-
         self.signUpErrorDialog = flet.AlertDialog(
             modal=True,
             title=flet.Text("Error encountered when creating account", style=flet.TextThemeStyle.LABEL_LARGE, size=20),
@@ -325,7 +325,7 @@ class Authentication(flet.Row):
             tooltip="Clear section",
         )
 
-        
+        # assembling layout elements together
         self.controls = [
             self.imageColumn,
 
@@ -480,31 +480,34 @@ class Authentication(flet.Row):
         self.alignment = flet.MainAxisAlignment.START,
         self.expand=True
     
+    # on sign in
     def signIn(self, e: flet.ControlEvent):
         token = authentication.login_user(self.emailSignIn.value, self.passSignIn.value)
         self.page.update()
 
         if token:
             authentication.store_session(token)
-            print("WENT 1")
+            # print("WENT 1")
             self.page.go('/home')
-            print("WENT 2")
+            # print("WENT 2")
             # self.page.update()
         else:
             self.page.dialog = self.signInErrorDialog
             self.page.dialog.open = True
             self.page.update()
 
-    
+    # clears sign in page
     def clearSignIn(self, e: flet.ControlEvent):
         self.emailSignIn.value, self.passSignIn.value = None, None
         self.page.update()
 
+    # transitions from sign in to sign up page
     def signInToSignUp(self, e: flet.ControlEvent):
         self.page.close_dialog()
         self.authTabs.selected_index = 1
         self.page.update()
 
+    # check if sign in email is valid and reacts accordingly
     def validSignInEmail(self, e: flet.ControlEvent):
         pattern = r'^[\w\.-]+@[\w\.-]+\.\w+$'
         if re.match(pattern, self.emailSignIn.value):
@@ -515,11 +518,13 @@ class Authentication(flet.Row):
             self.emailSignIn.error_text = "Enter a valid email address"
             self.page.update()
     
+    # check if sign in email is valid and return
     def is_validSignInEmail(self):
         pattern = r'^[\w\.-]+@[\w\.-]+\.\w+$'
         self.page.update()
         return re.match(pattern, self.emailSignIn.value)
 
+    # check if sign in password is valid and react accordingly
     def validSignInPassword(self, e: flet.ControlEvent):
         if len(self.passSignIn.value)>7:
             self.passSignIn.error_text = ""
@@ -529,10 +534,12 @@ class Authentication(flet.Row):
             self.passSignIn.error_text = "Password must be at least 8 characters long"
             self.page.update()
 
+    # check if sign in password is valid
     def is_validSignInPassword(self):
         self.page.update()
         return len(self.passSignIn.value)>7
 
+    # enables sign in button if all sign in elements present
     def validate_signIn(self, e: flet.ControlEvent):
         if all([self.emailSignIn.value, self.passSignIn.value, self.is_validSignInEmail(), self.is_validSignInPassword()]):
             self.signInButton.disabled = False
@@ -541,6 +548,7 @@ class Authentication(flet.Row):
         
         self.page.update()
 
+    # handles errors in signing in (incorrect password, account not found)
     def signInError(self, e: flet.ControlEvent):
         try:
             self.page.update() 
@@ -553,6 +561,7 @@ class Authentication(flet.Row):
             self.emailSignIn.value, self.passSignIn.value = None, None
             self.page.update()
 
+    # signing up handler
     def signUp(self, e: flet.ControlEvent):
         user = authentication.create_user(self.emailSignUp.value, self.passSignUp.value, self.mtSelection.value)
         if user:
@@ -565,15 +574,18 @@ class Authentication(flet.Row):
             self.page.show_dialog(self.signUpErrorDialog)
             self.page.update()
 
+    # clears sign up page
     def clearSignUp(self, e: flet.ControlEvent):
         self.emailSignUp.value, self.passSignUp.value, self.mtSelection.value, self.tcCheckbox.value = None, None, None, None, None
         self.page.update()
 
+    # transitions from sign up to sign in page
     def signUpToSignIn(self, e: flet.ControlEvent):
         self.page.close_dialog()
         self.authTabs.selected_index = 0
         self.page.update()
 
+    # checks if sign up email is valid and reacts accordingly
     def validSignUpEmail(self, e: flet.ControlEvent):
         pattern = r'^[\w\.-]+@[\w\.-]+\.\w+$'
         if re.match(pattern, self.emailSignUp.value):
@@ -584,11 +596,13 @@ class Authentication(flet.Row):
             self.emailSignUp.error_text = "Enter a valid email address"
             self.page.update()
     
+    # checks if sign up email is valid and returns
     def is_validSignUpEmail(self):
         pattern = r'^[\w\.-]+@[\w\.-]+\.\w+$'
         self.page.update()
         return re.match(pattern, self.emailSignUp.value)
 
+    # checks if sign up password is valid and reacts accordingly
     def validSignUpPassword(self, e: flet.ControlEvent):
         if len(self.passSignUp.value)>7:
             self.passSignUp.error_text = ""
@@ -598,10 +612,12 @@ class Authentication(flet.Row):
             self.passSignUp.error_text = "Password must be at least 8 characters long"
             self.page.update()
 
+    # checks if sign up password is valid and returns
     def is_validSignUpPassword(self):
         self.page.update()
         return len(self.passSignUp.value)>7
 
+    # enables sign up button if all fields are filled correctly
     def validate_signUp(self, e: flet.ControlEvent):
         if all([self.emailSignUp.value, self.passSignUp.value, self.mtSelection.value, self.tcCheckbox.value, self.is_validSignUpEmail(), self.is_validSignUpPassword()]):
             self.signUpButton.disabled = False
@@ -612,10 +628,11 @@ class Authentication(flet.Row):
         
         self.page.update()
 
+    # handles sign up errors
     def signUpError(self, e: flet.ControlEvent):
         try:
             account = database.child('users').order_by_child('email').equal_to(self.emailSignUp.value).get().val()
-            print('GOT A')
+            # print('GOT A')
             self.emailSignUp.value, self.passSignUp.value, self.mtSelection.value, self.tcCheckbox.value = None, None, None, None, None
             self.emailSignUp.error_text = "Account already exists. Sign in instead."
             self.page.update()
@@ -624,23 +641,28 @@ class Authentication(flet.Row):
             self.emailSignUp.value, self.passSignUp.value = None, None
             self.page.update()
 
+# done by Kavin
+# Home screen
 class Home(flet.Row):
     def __init__(self, page: flet.Page):
         super().__init__()
-        print('HOME')
+        # print('HOME')
         page.update()
         self.bgcolor = BG
         self.expand = True
         self.alignment = flet.MainAxisAlignment.START
+
+        # for communication with firebase: initialise handler
         self.user_id = authentication.authenticate_token(authentication.load_token())
         self.user = authentication.load_user()
         self.current_user_name = authentication.get_name(authentication.load_token())
 
-        print(self.user_id)
+        # print(self.user_id)
         page.update()
 
         self.navigation_rail = NavigationRail(page)
 
+        # build home screen layout
         self.controls = [
             self.navigation_rail,
 
@@ -973,10 +995,12 @@ class Home(flet.Row):
 
         self.alignment = "start"
 
+# done by Kavin
+# ability quiz wrapper, doesn't handle the main logic but does display it
 class AbilityQuiz(flet.Row):
     def __init__(self, page: flet.Page):
         super().__init__()
-        print('AbilityQuiz')
+        # print('AbilityQuiz')
         page.update()
         self.bgcolor = 'red'
         self.expand = True
@@ -997,10 +1021,12 @@ class AbilityQuiz(flet.Row):
             AbilityQuizCard(ability_quiz_questions).build(page)
         ]
 
+#done by Kavin
+# also another wrapper that doesn't handle the main logic
 class TargetedPractice(flet.Row):
     def __init__(self, page: flet.Page):
         super().__init__()
-        print('TargetedPractice')
+        # print('TargetedPractice')
         page.update()
         self.expand = True
         self.alignment = flet.MainAxisAlignment.START
@@ -1038,6 +1064,7 @@ class TargetedPractice(flet.Row):
         global selectedIndex
         selectedIndex = 1
 
+# done by Sai
 def NavigationRail(page):
     def logout(e: flet.ControlEvent):
         authentication.revoke_token(authentication.load_token())
@@ -1103,11 +1130,14 @@ def NavigationRail(page):
 
     return navigation_rail 
 
+# done by Bobby
+# main logic for ability quiz
 class AbilityQuizCard(flet.UserControl):
     def __init__(self, quiz):
         self.user_id = authentication.authenticate_token(authentication.load_token())
         self.user = authentication.load_user()
 
+        # initialise home screen
         self.defaultScreen = flet.Column(
             controls=[
                 flet.Container(
@@ -1199,14 +1229,14 @@ class AbilityQuizCard(flet.UserControl):
                     #expand=True
                 ),
 
-                flet.DataTable(
-                    columns=[
-                        flet.DataColumn(flet.Text("No."), numeric=True),
-                        flet.DataColumn(flet.Text("Question")),
-                        flet.DataColumn(flet.Text("Your answer"), numeric=True),
-                        flet.DataColumn(flet.Text("Correct answer"), numeric=True),
-                    ],
-                    rows=[
+                #flet.DataTable(
+                #    columns=[
+                #        flet.DataColumn(flet.Text("No."), numeric=True),
+                #        flet.DataColumn(flet.Text("Question")),
+                #        flet.DataColumn(flet.Text("Your answer"), numeric=True),
+                #        flet.DataColumn(flet.Text("Correct answer"), numeric=True),
+                #    ],
+                #    rows=[
 
                         # DISPLAY LATEST DATA BELOW USING: database.child(f'users/{self.user_id}/aq_latest_attempt').get().val()
 
@@ -1239,8 +1269,8 @@ class AbilityQuizCard(flet.UserControl):
                         #         flet.DataCell(flet.Text("43")),
                         #     ],
                         # ),
-                    ],
-                ),
+                #    ],
+                #),
                 flet.Text("Click the button to start a new ability quiz!\nNote: Note: if you tab out while the ability quiz is ongoing, you will have to redo the quiz."),
                 flet.ElevatedButton(
                     text = 'Start new quiz',
@@ -1249,12 +1279,14 @@ class AbilityQuizCard(flet.UserControl):
             ]
         )
 
+
         self.state = 0
         self.quiz = quiz
 
         self.scores = [None]*len(self.quiz)
         self.controls = [self.defaultScreen] # initialise with [self.defaultScreen] and show rest when start quiz is clicked
 
+    # updates question variables
     def refresh_questions(self):
         self.questions = list(self.quiz[self.state])
         self.instructions = self.quiz[self.state].instructions
@@ -1264,21 +1296,18 @@ class AbilityQuizCard(flet.UserControl):
             self.passage = ""
         self.selections = [None]*len(self.quiz[self.state])
 
+    # main outlet for display
     def build(self, page):
         self.page = page
-        # del self.controls[0]
-        # self.refresh_questions()
-        
-        #self.controls.append(
-        #    flet.Column(controls=[
-        #        flet.Text("Click the button to start the ability quiz!"),
-        #        flet.Text("Note: if you tab out while the ability quiz is ongoing, you will have to redo the quiz."),
-        #        flet.FilledButton(text="Start", on_click=self.start)
-        #    ], alignment=flet.alignment.center, expand=True))
         return flet.Row(controls=self.controls, width=page.width-50)
 
+    # builds the main quiz layout
     def rebuild(self):
         tabs = []
+        # pretty unwieldy method of displaying the questions on screen
+        # goes through each question and adds the question details and the little selector onto it
+        # it works though so i won't complain
+        # mr pang is not happy
         for i in range(len(self.questions)):
             options = [flet.Text("Q%d) " %(i+1) + self.questions[i].name, weight=flet.FontWeight.BOLD)]
             answers = []
@@ -1294,8 +1323,9 @@ class AbilityQuizCard(flet.UserControl):
             options.append(flet.Divider(height=1))
             #print(options)
             tabs += options
-
         self.button = flet.ElevatedButton(text="Next", disabled=True, on_click=self.nextpage)
+
+        # puts together the main layout
         self.controls.append(flet.Container(
                                     content=flet.Column(controls=[
                                             flet.Text(self.instructions, weight=flet.FontWeight.BOLD),
@@ -1315,12 +1345,15 @@ class AbilityQuizCard(flet.UserControl):
                                     expand=True
                                 ))
 
+    # reinitialises layout on quiz start
     def start(self, e: flet.ControlEvent):
         del self.controls[0]
         self.refresh_questions()
         self.rebuild()
         self.page.update()
 
+    # functionality for next page button
+    # moves on to next page, edits button in case the next page is the last
     def nextpage(self, e: flet.ControlEvent):
         self.grade_curr()
 
@@ -1333,15 +1366,17 @@ class AbilityQuizCard(flet.UserControl):
             self.button.text = "Submit"
             self.button.on_click = self.submit
         
-        print(self.controls)
+        #print(self.controls)
         self.page.update()
 
+    # grades the current page
     def grade_curr(self):
         curr_score = self.quiz[self.state].grade(self.selections)
         self.scores[self.state] = curr_score
 
+    # disable submit button if not all questions complete
     def validate(self, e: flet.ControlEvent):
-        print(e.control.selected)
+        #print(e.control.selected)
         si, sj = list(e.control.selected)[0].split(",")
         # print(si, sj)
         self.selections[int(si)] = int(sj)
@@ -1351,14 +1386,17 @@ class AbilityQuizCard(flet.UserControl):
             self.button.disabled = True
         self.page.update()
 
+    # handles submission
     def submit(self, e: flet.ControlEvent):
         self.grade_curr()
-        print(self.scores)
+        #print(self.scores)
+        # score calculation
         exp_score_perc = (self.scores[0]+self.scores[1])/(len(self.quiz[0])+len(self.quiz[1]))
         hcl_score_perc = (self.scores[2]+self.scores[3])/(len(self.quiz[2])+len(self.quiz[3]))
         exp_grade = "Proficient" if exp_score_perc > 0.67 else "Competent" if exp_score_perc > 0.33 else "Fair"
         hcl_grade = "Proficient" if hcl_score_perc > 0.67 else "Competent" if hcl_score_perc > 0.33 else "Fair"
 
+        # update and display text
         del self.controls[0:3]
         self.controls.append(flet.Container(content=flet.Column(controls=[
             flet.Text("You have...", size=20),
@@ -1369,6 +1407,7 @@ class AbilityQuizCard(flet.UserControl):
         ], alignment=flet.alignment.center)))
         self.page.update()
 
+        # updates firebase database
         database.child(f'users/{self.user_id}/express_proficiency').set(exp_grade)
         database.child(f'users/{self.user_id}/higher_proficiency').set(hcl_grade)
         database.child(f'users/{self.user_id}/ability_quiz_tries').set(int(self.user['ability_quiz_tries'])+1)
@@ -1377,15 +1416,18 @@ class AbilityQuizCard(flet.UserControl):
 
         # End quiz
 
-            # Delete quiz controls and add self.defaultScreen
+        # Delete quiz controls and add self.defaultScreen
         
         self.page.update()
 
+# done by Bobby
+# main logic for targeted practice
 class TargetedPracticeCard(flet.UserControl):
     def __init__(self, quizzes):
         self.user_id = authentication.authenticate_token(authentication.load_token())
         self.user = authentication.load_user()
 
+        # massaging the data
         self.quizzes = quizzes
         self.quizzes_by_level = {}
         for quiz in quizzes:
@@ -1394,6 +1436,7 @@ class TargetedPracticeCard(flet.UserControl):
             else:
                 self.quizzes_by_level["Secondary "+str(quiz["grade"])] = [quiz]
 
+        # initialisation of front page ui elements
         self.leveldropdown = flet.Dropdown(
             label="Level",
             width=300,
@@ -1437,6 +1480,8 @@ class TargetedPracticeCard(flet.UserControl):
         # trick to update contents of screen even after displaying
         self.controls = [self.defaultScreen]
 
+    # the following three functions change information within dropdown menus dynamically based on
+    # what questions are available
     def level_changed(self, e: flet.ControlEvent):
         self.passage = None
         self.streamdropdown.options = [flet.dropdown.Option(group["stream"]) for group in self.quizzes_by_level[self.leveldropdown.value]]
@@ -1466,6 +1511,7 @@ class TargetedPracticeCard(flet.UserControl):
         self.startbutton.disabled = False
         self.page.update()
 
+    # main outlet for display
     def build(self, page):
         self.page = page
         # del self.controls[0]
@@ -1473,6 +1519,7 @@ class TargetedPracticeCard(flet.UserControl):
 
         return flet.Row(controls=self.controls, width=page.width-50)
 
+    # build question layout
     def rebuild(self):
         tabs = []
         self.questions = list(self.quizgroup)
@@ -1515,18 +1562,16 @@ class TargetedPracticeCard(flet.UserControl):
                                     expand=True
                                 ))
 
+    # tear down initial view and build question layout
     def start(self, e: flet.ControlEvent):
         del self.controls[0]
         self.selections = [None]*len(self.quizgroup)
         self.rebuild()
         self.page.update()
 
-    def grade_curr(self):
-        curr_score = self.quiz[self.state].grade(self.selections)
-        self.scores[self.state] = curr_score
-
+    # disables submit button if all questions have yet to be answered
     def validate(self, e: flet.ControlEvent):
-        print(e.control.selected)
+        # print(e.control.selected)
         si, sj = list(e.control.selected)[0].split(",")
         # print(si, sj)
         self.selections[int(si)] = int(sj)
@@ -1536,6 +1581,7 @@ class TargetedPracticeCard(flet.UserControl):
             self.button.disabled = True
         self.page.update()
 
+    # handles submission screen
     def submit(self, e: flet.ControlEvent):
         total_score = self.quizgroup.grade(self.selections)
 
@@ -1567,6 +1613,7 @@ class TargetedPracticeCard(flet.UserControl):
         ))
         self.page.update()
 
+    # handles restart button
     def restart(self, e):
         del self.controls[:]
         self.controls.append(self.defaultScreen)
@@ -1574,3 +1621,7 @@ class TargetedPracticeCard(flet.UserControl):
 
 if __name__  ==  "__main__":
     flet.app(target = Main, view = flet.FLET_APP)
+
+# spaghetti? in my codebase?
+# it's more likely than you think
+# free source code scanner!
