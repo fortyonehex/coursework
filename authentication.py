@@ -35,6 +35,7 @@ def create_user(email, password, motherTongue):
             'aq_latest_attempt': None,
             'ability_quiz_score': 0,
             'tp_latest_attempt': None,
+            'targeted_practice_level': 0,
             'targeted_practice_tries': 0,
         })
         print('SET')

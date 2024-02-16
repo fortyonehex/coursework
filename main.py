@@ -145,8 +145,6 @@ class Main(flet.UserControl):
         except:
             return None
 
-    
-
 class Authentication(flet.Row):
     def __init__(self, page: flet.Page):
         super().__init__()
@@ -556,7 +554,7 @@ class Authentication(flet.Row):
             self.page.update()
 
     def signUp(self, e: flet.ControlEvent):
-        user = authentication.create_user(self.emailSignUp.value, self.passSignUp.value, self.mtSelection.value, self.levelSelection.value)
+        user = authentication.create_user(self.emailSignUp.value, self.passSignUp.value, self.mtSelection.value)
         if user:
             token = authentication.login_user(self.emailSignUp.value, self.passSignUp.value)
             authentication.store_session(token)
@@ -605,7 +603,7 @@ class Authentication(flet.Row):
         return len(self.passSignUp.value)>7
 
     def validate_signUp(self, e: flet.ControlEvent):
-        if all([self.emailSignUp.value, self.passSignUp.value, self.mtSelection.value, self.levelSelection.value, self.tcCheckbox.value, self.is_validSignUpEmail(), self.is_validSignUpPassword()]):
+        if all([self.emailSignUp.value, self.passSignUp.value, self.mtSelection.value, self.tcCheckbox.value, self.is_validSignUpEmail(), self.is_validSignUpPassword()]):
             self.signUpButton.disabled = False
             self.page.update()
         else:
@@ -1105,7 +1103,6 @@ def NavigationRail(page):
 
     return navigation_rail 
 
-
 class AbilityQuizCard(flet.UserControl):
     def __init__(self, quiz):
         self.user_id = authentication.authenticate_token(authentication.load_token())
@@ -1541,11 +1538,38 @@ class TargetedPracticeCard(flet.UserControl):
 
     def submit(self, e: flet.ControlEvent):
         total_score = self.quizgroup.grade(self.selections)
-        question_analysis = self.quizgroup.grade_detailed(self.selections)
-        print(self.question_analysis)
 
         del self.controls[0:3]
-        self.controls.append(flet.Text(repr(question_analysis)))
+
+        self.controls.append(
+            flet.Column(controls=[
+                flet.Text("You got %d/%d question(s) correct! Here's a breakdown:" %(total_score, len(self.quizgroup))),
+                flet.DataTable(
+                    columns=[
+                        flet.DataColumn(flet.Text("No."), numeric=True),
+                        flet.DataColumn(flet.Text("Question")),
+                        flet.DataColumn(flet.Text("Your answer")),
+                        flet.DataColumn(flet.Text("Correct answer")),
+                    ],
+                    rows=[
+                        flet.DataRow(
+                            cells=[
+                                flet.DataCell(flet.Text(i+1)),
+                                flet.DataCell(flet.Text(self.quizgroup[i].name)),
+                                flet.DataCell(flet.Text(self.quizgroup[i].options[self.selections[i]])),
+                                flet.DataCell(flet.Text(self.quizgroup[i].correct)),
+                            ],
+                        ) for i in range(len(self.quizgroup))
+                    ],
+                ),
+                flet.FilledButton("Try again", on_click=self.restart)
+            ]
+        ))
+        self.page.update()
+
+    def restart(self, e):
+        del self.controls[:]
+        self.controls.append(self.defaultScreen)
         self.page.update()
 
 if __name__  ==  "__main__":

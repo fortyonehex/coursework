@@ -1,3 +1,5 @@
+# Bobby Lee
+
 from questions import *
 
 class BaseQuiz():
@@ -38,36 +40,3 @@ class BaseQuiz():
             score += mark
             self.individual_grade.append(mark)
         return score
-
-# incomplete
-"""
-class AbilityQuiz():
-    # questions passed should be in the format [{grade: x, questions: QuestionGroup/PassageGroup}]
-    def __init__(self, questions):
-        assert type(questions) == list
-        for q in questions:
-            assert type(q) == dict
-            assert type(q["grade"]) == int
-            assert type(q["questions"]) == list
-            for qn in q["questions"]:
-                assert type(qn) in [QuestionGroup, PassageGroup]
-
-        self.questions = {}
-        for q in questions:
-            if q["grade"] not in self.questions:
-                self.questions[q["grade"]] = q["questions"]
-            else:
-                self.questions[q["grade"]] += q["questions"]
-        
-        self.curr_level = None
-
-    def this_section(self):
-        
-
-    def next_section(self):
-        pass
-
-    # MUST be called before
-    def grade_section(self, answers):
-        pass
-"""
